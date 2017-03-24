@@ -2,28 +2,10 @@
 	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"namePrefix": {
-			"type": "string",
-			"minLength": 3,
-			"maxLength": 7,
-			"metadata": {
-				"description": "Naming prefix for each new resource created. 3-char min, 7-char max, lowercase alphanumeric"
-			},
-			"defaultValue": "ttvdsol"
-		},
-		"vpnGateway": {
-			"type": "string",
-			"defaultValue": "none",
-			"allowedValues": [
-				"none",
-				"basic",
-				"standard",
-				"highperformace"
-			]
-		}
 	},
 	"variables": {
 	},
-	"resources": [],
+	"resources": [
+	],
 	"outputs": {}
 }
