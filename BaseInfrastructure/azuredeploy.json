@@ -7,7 +7,7 @@
 			"minLength": 3,
 			"maxLength": 7,
 			"metadata": {
-				"description": "Naming prefix for each new resource created. 3-char min, 8-char max, lowercase alphanumeric"
+				"description": "Naming prefix for each new resource created. 3-char min, 7-char max, lowercase alphanumeric"
 			},
 			"defaultValue": "ttvdsol"
 		},
@@ -23,97 +23,7 @@
 		}
 	},
 	"variables": {
-		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'azuredeploy.json','')]",
-		"vpnGatewaySettings": {
-			"name": "[concat(parameters('namePrefix'),'gway001')]",
-			"sku": "[variables(concat('vpnGatewaySize-', parameters('vpnGateway'))).sku]",
-			"template": "[variables(concat('vpnGatewaySize-', parameters('vpnGateway'))).template]",
-			"vpnType": "RouteBased",
-			"publicIpName": "[concat(parameters('namePrefix'),'gway001pip')]"
-		},
-		"vpnGatewaySize-none": {
-			"sku": "",
-			"template": "[concat(variables('baseTemplateUri'), 'vnet/gateway-none.json')]"
-		},
-		"vpnGatewaySize-basic": {
-			"sku": "Basic",
-			"template": "[concat(variables('baseTemplateUri'), 'vnet/gateway.json')]"
-		},
-		"vpnGatewaySize-standard": {
-			"sku": "Standard",
-			"template": "[concat(variables('baseTemplateUri'), 'vnet/gateway.json')]"
-		},
-		"vpnGatewaySize-highperformance": {
-			"sku": "HighPerformance",
-			"template": "[concat(variables('baseTemplateUri'), 'vnet/gateway.json')]"
-		},
-		"virtualNetworkSettings": {
-			"name": "[concat(parameters('namePrefix'),'vnet001')]",
-			"AddressPrefix": "10.3.0.0/16",
-			"managementSubnetName": "[concat(parameters('namePrefix'),'snet001managementServices')]",
-			"managementSubnetAddressPrefix": "10.3.1.0/24",
-			"managementNetworkSecurityGroupName": "[concat(parameters('namePrefix'),'nscg001managementServices')]",
-			"dnsServers": ["10.3.1.4"],
-			"dmzSubnetName": "[concat(parameters('namePrefix'),'snet001dmzServices')]",
-			"dmzSubnetAddressPrefix": "10.3.2.0/24",
-			"dmzNetworkSecurityGroupname": "[concat(parameters('namePrefix'),'nscg001dmzServices')]",
-			"databaseSubnetName": "[concat(parameters('namePrefix'),'snet001databaseServices')]",
-			"databaseSubnetAddressPrefix": "10.3.3.0/24",
-			"databaseNetworkSecurityGroupName": "[concat(parameters('namePrefix'),'nscg001databaseServices')]",
-			"emergencySubnetName": "[concat(parameters('namePrefix'),'snet001emergencyServices')]",
-			"emergencySubnetAddressPrefix": "10.3.4.0/24",
-			"emergencyNetworkSecurityGroupName": "[concat(parameters('namePrefix'),'nscg001emergencyServices')]",
-			"gatewaySubnetAddressPrefix": "10.3.5.0/24",
-			"templateUri": "[variables('baseTemplateUri')]"
-		},
-		"templates": {
-			"virtualNetwork": "[concat(variables('baseTemplateUri'), 'vnet/network.json')]"
-		},
-		"apiVersions": {
-			"virtualNetwork": "2015-01-01",
-			"gateway": "2015-01-01"
-		}
 	},
-	"resources": [{
-			"name": "networkDeployment",
-			"type": "Microsoft.Resources/deployments",
-			"apiVersion": "[variables('apiVersions').virtualNetwork]",
-			"dependsOn": [],
-			"properties": {
-				"mode": "Incremental",
-				"templateLink": {
-					"uri": "[variables('templates').virtualNetwork]",
-					"contentVersion": "1.0.0.0"
-				},
-				"parameters": {
-					"virtualNetwork": {
-						"value": "[variables('virtualNetworkSettings')]"
-					}
-				}
-			}
-		}, {
-			"name": "gatewayDeployment",
-			"type": "Microsoft.Resources/deployments",
-			"apiVersion": "[variables('apiVersions').gateway]",
-			"dependsOn": [
-				"Microsoft.Resources/deployments/networkDeployment"
-			],
-			"properties": {
-				"mode": "Incremental",
-				"templateLink": {
-					"uri": "[variables('vpnGatewaySettings').template]",
-					"contentVersion": "1.0.0.0"
-				},
-				"parameters": {
-					"virtualNetworkSettings": {
-						"value": "[variables('virtualNetworkSettings')]"
-					},
-					"vpnGatewaySettings": {
-						"value": "[variables('vpnGatewaySettings')]"
-					}
-				}
-			}
-		}
-	],
+	"resources": [],
 	"outputs": {}
 }
