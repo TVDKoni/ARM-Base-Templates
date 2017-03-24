@@ -1,4 +1,4 @@
-$SolutionPrefix = "ttvdsol"
+$SolutionPrefix = "ttvdsox"
 $AzureSubscriptionName = "Microsoft Azure"
 $ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroupLocation = "West Europe"

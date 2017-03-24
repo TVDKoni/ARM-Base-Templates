@@ -121,13 +121,13 @@
 	"resources": [{
 			"type": "Microsoft.Compute/availabilitySets",
 			"name": "[variables('vmAvailabilitySetName')]",
-			"apiVersion": "[variables('apiVersionCompute')]"
+			"apiVersion": "[variables('apiVersionCompute')]",
 			"location": "[resourceGroup().location]",
 			"properties": {}
 		}, {
 			"type": "Microsoft.Storage/storageAccounts",
 			"name": "[variables('witnessStorageName')]",
-			"apiVersion": "[variables('apiVersionStorage')]"
+			"apiVersion": "[variables('apiVersionStorage')]",
 			"location": "[resourceGroup().location]",
 			"sku": {
 				"name": "[variables('witnessStorageType')]"
@@ -230,7 +230,7 @@
 		}, {
 			"type": "Microsoft.Compute/virtualMachines/extensions",
 			"name": "[concat(variables('vmNamePrefix'), padLeft(copyindex(),3,'0'),'s2dPrep')]",
-			"apiVersion": "[variables('apiVersionCompute')]"
+			"apiVersion": "[variables('apiVersionCompute')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"virtualMachineLoop"
@@ -263,7 +263,7 @@
 		}, {
 			"type": "Microsoft.Compute/virtualMachines/extensions",
 			"name": "[concat(variables('vmNamePrefix'), padLeft(copyindex(),3,'0'),'s2dConfig')]",
-			"apiVersion": "[variables('apiVersionCompute')]"
+			"apiVersion": "[variables('apiVersionCompute')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"virtualMachineLoop",

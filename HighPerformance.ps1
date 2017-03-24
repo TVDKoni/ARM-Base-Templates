@@ -1,4 +1,4 @@
-$SolutionPrefix = "ttvdsol"
+$SolutionPrefix = "ttvdsox"
 $AzureSubscriptionName = "Microsoft Azure"
 $ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroupLocation = "West Europe"
@@ -6,10 +6,10 @@ $TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates
 
 $TemplateParameters = @{
     namePrefix = $SolutionPrefix
-    vpnGateway = "basic"
 	storageAccountType = "Standard_LRS"
+	vmCount = 1
 	vmSize = "Standard_DS1_v2"
-	vmDiskCount = 12
+	vmDiskCount = 4
 	osVersion = "2016"
 	adminPassword = "PleaseSpecify"
 	existingVirtualNetworkName = "ttvdsolvnet001"
