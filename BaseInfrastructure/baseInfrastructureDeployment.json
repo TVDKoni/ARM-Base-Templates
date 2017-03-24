@@ -23,7 +23,7 @@
 		}
 	},
 	"variables": {
-		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'azuredeploy.json','')]",
+		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'baseInfrastructureDeployment.json','')]",
 		"vpnGatewaySettings": {
 			"name": "[concat(parameters('namePrefix'),'gway001')]",
 			"sku": "[variables(concat('vpnGatewaySize-', parameters('vpnGateway'))).sku]",

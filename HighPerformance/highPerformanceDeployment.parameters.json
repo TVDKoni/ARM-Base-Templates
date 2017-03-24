@@ -5,20 +5,32 @@
 		"namePrefix": {
 			"value": "ttvdsol"
 		},
+		"nameSuffix": {
+			"value": "001"
+		},
 		"storageAccountType": {
 			"value": "Standard_LRS"
 		},
 		"vmSize": {
 			"value": "Standard_DS1_v2"
 		},
+		"vmCount": {
+			"value": 1
+		},
 		"vmDiskCount": {
-			"value": "2"
+			"value": 10
 		},
 		"osVersion": {
 			"value": "2016"
 		},
 		"adminPassword": {
-			"value": "-f2ot?%|5ot?%|"
+			"value": "PleaseSpecify"
+		},
+		"existingVirtualNetworkName": {
+			"value": "ttvdsolvnet001"
+		},
+		"existingSubnetName": {
+			"value": "ttvdsolsnet001"
 		}
 	}
 }

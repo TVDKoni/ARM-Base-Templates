@@ -31,6 +31,14 @@
 			},
 			"defaultValue": "Standard_DS1_v2"
 		},
+		"vmCount": {
+			"type": "int",
+			"minValue": 1,
+			"maxValue": 3,
+			"metadata": {
+				"description": "Number of S2D VMs to be created in cluster (Min=2, Max=3)"
+			}
+		},
 		"vmDiskSize": {
 			"type": "int",
 			"minValue": 128,
@@ -42,7 +50,7 @@
 		},
 		"vmDiskCount": {
 			"type": "int",
-			"minValue": 2,
+			"minValue": 1,
 			"maxValue": 32,
 			"metadata": {
 				"description": "Number of data disks on each S2D VM (Min=2, Max=32). Ensure that the VM size you've selected will support this number of data disks."
@@ -66,20 +74,32 @@
 				"2016"
 			],
 			"defaultValue": "2016"
+		},
+		"existingVirtualNetworkName": {
+			"type": "string",
+			"metadata": {
+				"description": "Name of the existing VNET."
+			}
+		},
+		"existingSubnetName": {
+			"type": "string",
+			"metadata": {
+				"description": "Name of the existing subnet in the existing VNET to which the S2D VMs should be deployed"
+			}
 		}
 	},
 	"variables": {
-		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'azuredeploy.json','')]",
-		"sofsName": "[concat(parameters('namePrefix'),'sofs001')]",
-		"shareName": "[concat(parameters('namePrefix'),'shar001')]",
+		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'highPerformanceDeployment.json','')]",
+		"subnetRef": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks/subnets',parameters('existingVirtualNetworkName'),parameters('existingSubnetName'))]",
+		"sofsName": "[concat(parameters('namePrefix'),'sofs')]",
+		"shareName": "[concat(parameters('namePrefix'),'shar')]",
 		"adminUsername": "sysadmin",
 		"OSVersion": {
 			"2012R2": "2012-R2-Datacenter",
 			"2016": "2016-Datacenter"
-		},
+		}
 	},
-	"resources": [
-		{
+	"resources": [{
 			"name": "highPerfDeployment",
 			"type": "Microsoft.Resources/deployments",
 			"apiVersion": "2015-01-01",
@@ -87,7 +107,7 @@
 			"properties": {
 				"mode": "Incremental",
 				"templateLink": {
-					"uri": "[concat(variables('baseTemplateUri'), 'nestedtemplates/deploy-s2d-cluster.json')]"
+					"uri": "[concat(variables('baseTemplateUri'), 'nestedtemplates/deploy-s2d.json')]"
 					"contentVersion": "1.0.0.0"
 				},
 				"parameters": {
@@ -95,7 +115,7 @@
 						"value": "[parameters('namePrefix')]"
 					},
 					"adminUsername": {
-						"value": "[parameters('adminUsername')]"
+						"value": "[variables('adminUsername')]"
 					},
 					"adminPassword": {
 						"value": "[parameters('adminPassword')]"
@@ -124,20 +144,14 @@
 					"shareName": {
 						"value": "[parameters('shareName')]"
 					},
-					"_artifactsLocation": {
-						"value": "[parameters('_artifactsLocation')]"
+					"imageSKU": {
+						"value": "[variables('OSVersion')[parameters('osVersion')]]"
 					},
-					"_artifactsLocationSasToken": {
-						"value": "[parameters('_artifactsLocationSasToken')]"
+					"baseTemplateUri": {
+						"value": "[variables('baseTemplateUri')]"
 					}
 				}
 			}
 		}
-	],
-	"outputs": {
-		"sofsPath": {
-			"type": "string",
-			"value": "[concat('\\\\',reference(variables('highPerfDeployment')).outputs.sofsName.value,'\\',reference(variables('highPerfDeployment')).outputs.shareName.value)]"
-		}
-	}
+	]
 }
