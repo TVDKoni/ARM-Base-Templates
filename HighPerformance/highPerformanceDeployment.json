@@ -139,10 +139,10 @@
 						"value": "[parameters('vmDiskCount')]"
 					},
 					"sofsName": {
-						"value": "[parameters('sofsName')]"
+						"value": "[variables('sofsName')]"
 					},
 					"shareName": {
-						"value": "[parameters('shareName')]"
+						"value": "[variables('shareName')]"
 					},
 					"imageSKU": {
 						"value": "[variables('OSVersion')[parameters('osVersion')]]"
