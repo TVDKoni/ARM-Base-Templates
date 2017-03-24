@@ -1,0 +1,143 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"namePrefix": {
+			"type": "string",
+			"minLength": 3,
+			"maxLength": 7,
+			"metadata": {
+				"description": "Naming prefix for each new resource created. 3-char min, 8-char max, lowercase alphanumeric"
+			},
+			"defaultValue": "ttvdsol"
+		},
+		"storageAccountType": {
+			"type": "string",
+			"allowedValues": [
+				"Standard_LRS",
+				"Standard_GRS",
+				"Standard_RAGRS",
+				"Premium_LRS"
+			],
+			"metadata": {
+				"description": "Type of new Storage Accounts (Standard_LRS, Standard_GRS, Standard_RAGRS or Premium_LRS) to be created to store VM disks"
+			},
+			"defaultValue": "Standard_LRS"
+		},
+		"vmSize": {
+			"type": "string",
+			"metadata": {
+				"description": "Size of the S2D VMs to be created"
+			},
+			"defaultValue": "Standard_DS1_v2"
+		},
+		"vmDiskSize": {
+			"type": "int",
+			"minValue": 128,
+			"maxValue": 1023,
+			"metadata": {
+				"description": "Size of each data disk in GB on each S2D VM (Min=128, Max=1023)"
+			},
+			"defaultValue": 1023
+		},
+		"vmDiskCount": {
+			"type": "int",
+			"minValue": 2,
+			"maxValue": 32,
+			"metadata": {
+				"description": "Number of data disks on each S2D VM (Min=2, Max=32). Ensure that the VM size you've selected will support this number of data disks."
+			},
+			"defaultValue": 2
+		},
+		"adminPassword": {
+			"type": "securestring",
+			"minLength": 12,
+			"metadata": {
+				"description": "Password for the Administrator account of the existing Active Directory Domain"
+			}
+		},
+		"osVersion": {
+			"metadata": {
+				"description": "The OS version to use for the IaaS"
+			},
+			"type": "string",
+			"allowedValues": [
+				"2012R2",
+				"2016"
+			],
+			"defaultValue": "2016"
+		}
+	},
+	"variables": {
+		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'azuredeploy.json','')]",
+		"sofsName": "[concat(parameters('namePrefix'),'sofs001')]",
+		"shareName": "[concat(parameters('namePrefix'),'shar001')]",
+		"adminUsername": "sysadmin",
+		"OSVersion": {
+			"2012R2": "2012-R2-Datacenter",
+			"2016": "2016-Datacenter"
+		},
+	},
+	"resources": [
+		{
+			"name": "highPerfDeployment",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2015-01-01",
+			"dependsOn": [],
+			"properties": {
+				"mode": "Incremental",
+				"templateLink": {
+					"uri": "[concat(variables('baseTemplateUri'), 'nestedtemplates/deploy-s2d-cluster.json')]"
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"namePrefix": {
+						"value": "[parameters('namePrefix')]"
+					},
+					"adminUsername": {
+						"value": "[parameters('adminUsername')]"
+					},
+					"adminPassword": {
+						"value": "[parameters('adminPassword')]"
+					},
+					"storageAccountType": {
+						"value": "[parameters('storageAccountType')]"
+					},
+					"nicSubnetUri": {
+						"value": "[variables('subnetRef')]"
+					},
+					"vmSize": {
+						"value": "[parameters('vmSize')]"
+					},
+					"vmCount": {
+						"value": "[parameters('vmCount')]"
+					},
+					"vmDiskSize": {
+						"value": "[parameters('vmDiskSize')]"
+					},
+					"vmDiskCount": {
+						"value": "[parameters('vmDiskCount')]"
+					},
+					"sofsName": {
+						"value": "[parameters('sofsName')]"
+					},
+					"shareName": {
+						"value": "[parameters('shareName')]"
+					},
+					"_artifactsLocation": {
+						"value": "[parameters('_artifactsLocation')]"
+					},
+					"_artifactsLocationSasToken": {
+						"value": "[parameters('_artifactsLocationSasToken')]"
+					}
+				}
+			}
+		}
+	],
+	"outputs": {
+		"sofsPath": {
+			"type": "string",
+			"value": "[concat('\\\\',reference(variables('highPerfDeployment')).outputs.sofsName.value,'\\',reference(variables('highPerfDeployment')).outputs.shareName.value)]"
+		}
+	}
+}
