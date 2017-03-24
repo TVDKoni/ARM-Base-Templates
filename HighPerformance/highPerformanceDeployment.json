@@ -107,7 +107,7 @@
 			"properties": {
 				"mode": "Incremental",
 				"templateLink": {
-					"uri": "[concat(variables('baseTemplateUri'), 'nestedtemplates/deploy-s2d.json')]"
+					"uri": "[concat(variables('baseTemplateUri'), 'nestedtemplates/deploy-s2d.json')]",
 					"contentVersion": "1.0.0.0"
 				},
 				"parameters": {
