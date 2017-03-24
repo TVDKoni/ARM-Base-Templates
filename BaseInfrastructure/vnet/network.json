@@ -7,13 +7,6 @@
 			"metadata": {
 				"description": "The virtual network object"
 			}
-		},
-		"DNS": {
-			"type": "array",
-			"defaultValue": [],
-			"metadata": {
-				"description": "The DNS Servers to configure for the VNET"
-			}
 		}
 	},
 	"variables": {
@@ -88,9 +81,6 @@
 				"displayName": "VNET - SBS"
 			},
 			"properties": {
-				"dhcpOptions": {
-					"dnsServers": "[parameters('DNS')]"
-				},
 				"addressSpace": {
 					"addressPrefixes": [
 						"[parameters('virtualNetwork').addressPrefix]"

@@ -53,7 +53,6 @@
 			"managementSubnetName": "[concat(parameters('namePrefix'),'snet001managementServices')]",
 			"managementSubnetAddressPrefix": "10.3.1.0/24",
 			"managementNetworkSecurityGroupName": "[concat(parameters('namePrefix'),'nscg001managementServices')]",
-			"dnsServers": ["10.3.1.4"],
 			"dmzSubnetName": "[concat(parameters('namePrefix'),'snet001dmzServices')]",
 			"dmzSubnetAddressPrefix": "10.3.2.0/24",
 			"dmzNetworkSecurityGroupname": "[concat(parameters('namePrefix'),'nscg001dmzServices')]",
@@ -114,6 +113,5 @@
 				}
 			}
 		}
-	],
-	"outputs": {}
+	]
 }
