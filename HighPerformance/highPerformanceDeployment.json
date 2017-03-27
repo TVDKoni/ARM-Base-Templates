@@ -48,6 +48,15 @@
 			},
 			"defaultValue": 1023
 		},
+		"vmStartIndex": {
+			"type": "int",
+			"minValue": 1,
+			"maxValue": 998,
+			"metadata": {
+				"description": "The start index, vm's have to be named with."
+			},
+			"defaultValue": 1
+		},
 		"vmDiskCount": {
 			"type": "int",
 			"minValue": 1,
@@ -135,6 +144,9 @@
 					},
 					"vmDiskSize": {
 						"value": "[parameters('vmDiskSize')]"
+					},
+					"vmStartIndex": {
+						"value": "[parameters('vmStartIndex')]"
 					},
 					"vmDiskCount": {
 						"value": "[parameters('vmDiskCount')]"

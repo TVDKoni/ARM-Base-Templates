@@ -17,6 +17,9 @@
 		"vmDiskCount": {
 			"type": "int"
 		},
+		"vmStartIndex": {
+			"type": "int"
+		},
 		"vmDiskSize": {
 			"type": "int"
 		},

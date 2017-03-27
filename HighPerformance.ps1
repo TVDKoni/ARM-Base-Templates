@@ -10,8 +10,9 @@ $TemplateParameters = @{
 	vmCount = 1
 	vmSize = "Standard_DS1_v2"
 	vmDiskCount = 2
+	vmStartIndex = 1
 	osVersion = "2016"
-	adminPassword = "PleaseSpecify"
+	adminPassword = "1Please-Specify3"
 	existingVirtualNetworkName = "ttvdsolvnet001"
 	existingSubnetName = "ttvdsolsnet001managementServices"
 }

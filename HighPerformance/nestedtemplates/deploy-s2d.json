@@ -63,6 +63,15 @@
 				"description": "Size of each data disk in GB on each S2D VM (Min=128, Max=1023)"
 			}
 		},
+		"vmStartIndex": {
+			"type": "int",
+			"minValue": 1,
+			"maxValue": 998,
+			"metadata": {
+				"description": "The start index, vm's have to be named with."
+			},
+			"defaultValue": 1
+		},
 		"vmDiskCount": {
 			"type": "int",
 			"minValue": 1,
@@ -113,10 +122,8 @@
 		"witnessStorageType": "Standard_LRS",
 		"vmAvailabilitySetName": "[concat(parameters('namePrefix'),'aset')]",
 		"vmLoopTemplateURL": "[concat(parameters('baseTemplateUri'),'/nestedtemplates/newVM.json')]",
-		"s2dPrepModulesURL": "[concat(parameters('baseTemplateUri'),'/dsc/prep-s2d.ps1.zip')]",
-		"s2dPrepFunction": "PrepS2D.ps1\\PrepS2D",
-		"s2dConfigModulesURL": "[concat(parameters('baseTemplateUri'),'/dsc/config-s2d.ps1.zip')]",
-		"s2dConfigFunction": "ConfigS2D.ps1\\ConfigS2D"
+		"s2dModulesURL": "[concat(parameters('baseTemplateUri'),'/dsc/s2d.zip')]",
+		"s2dFunction": "S2D.ps1\\S2D"
 	},
 	"resources": [{
 			"type": "Microsoft.Compute/availabilitySets",
@@ -135,7 +142,7 @@
 			"kind": "Storage"
 		}, {
 			"type": "Microsoft.Storage/storageAccounts",
-			"name": "[concat(variables('storageNamePrefix'), padLeft(copyindex(1),3,'0'))]",
+			"name": "[concat(variables('storageNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0'))]",
 			"apiVersion": "[variables('apiVersionStorage')]",
 			"copy": {
 				"name": "storageAccountLoop",
@@ -147,10 +154,25 @@
 			},
 			"kind": "Storage"
 		}, {
-			"name": "[concat(variables('vmNamePrefix'), padLeft(copyindex(1),3,'0'), 'nic')]",
+			"name": "[concat(variables('vmNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0'), 'pip')]",
+			"type": "Microsoft.Network/publicIPAddresses",
+			"location": "[resourceGroup().location]",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"copy": {
+				"name": "publicIpLoop",
+				"count": "[parameters('vmCount')]"
+			},
+			"properties": {
+				"publicIPAllocationMethod": "Dynamic"
+			}
+		}, {
+			"name": "[concat(variables('vmNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0'), 'nic')]",
 			"type": "Microsoft.Network/networkInterfaces",
 			"location": "[resourceGroup().location]",
 			"apiVersion": "[variables('apiVersionNetwork')]",
+			"dependsOn": [
+				"publicIpLoop"
+			],
 			"copy": {
 				"name": "nicLoop",
 				"count": "[parameters('vmCount')]"
@@ -160,6 +182,9 @@
 						"name": "ipconfig1",
 						"properties": {
 							"privateIPAllocationMethod": "Dynamic",
+							"publicIPAddress": {
+								"id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(variables('vmNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0'), 'pip'))]"
+							},
 							"subnet": {
 								"id": "[parameters('nicSubnetUri')]"
 							}
@@ -174,7 +199,7 @@
 				"name": "virtualMachineLoop",
 				"count": "[parameters('vmCount')]"
 			},
-			"name": "[concat(variables('vmNamePrefix'), padLeft(copyindex(1),3,'0'))]",
+			"name": "[concat(variables('vmNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0'))]",
 			"dependsOn": [
 				"storageAccountLoop",
 				"nicLoop",
@@ -187,10 +212,10 @@
 				},
 				"parameters": {
 					"vmName": {
-						"value": "[concat(variables('vmNamePrefix'), padLeft(copyindex(1),3,'0'))]"
+						"value": "[concat(variables('vmNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0'))]"
 					},
 					"storageAccountUri": {
-						"value": "[reference(concat('Microsoft.Storage/storageAccounts/',variables('StorageNamePrefix'), padLeft(copyindex(1),3,'0')),variables('apiVersionStorage')).primaryEndpoints.blob]"
+						"value": "[reference(concat('Microsoft.Storage/storageAccounts/',variables('StorageNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0')),variables('apiVersionStorage')).primaryEndpoints.blob]"
 					},
 					"vmAvailabilitySetName": {
 						"value": "[variables('vmAvailabilitySetName')]"
@@ -203,6 +228,9 @@
 					},
 					"vmDiskSize": {
 						"value": "[parameters('vmDiskSize')]"
+					},
+					"vmStartIndex": {
+						"value": "[parameters('vmStartIndex')]"
 					},
 					"adminUsername": {
 						"value": "[parameters('adminUsername')]"
@@ -225,6 +253,28 @@
 					"imageVersion": {
 						"value": "[parameters('imageVersion')]"
 					}
+				}
+			}
+		}, {
+			"type": "Microsoft.Compute/virtualMachines/extensions",
+			"name": "[concat(variables('vmNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0'),'/s2d')]",
+			"apiVersion": "[variables('apiVersionCompute')]",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"virtualMachineLoop"
+			],
+			"copy": {
+				"name": "virtualMachineExtensionLoop",
+				"count": "[parameters('vmCount')]"
+			},
+			"properties": {
+				"publisher": "Microsoft.Powershell",
+				"type": "DSC",
+				"typeHandlerVersion": "2.20",
+				"autoUpgradeMinorVersion": true,
+				"settings": {
+					"modulesUrl": "[variables('s2dModulesURL')]",
+					"configurationFunction": "[variables('s2dFunction')]"
 				}
 			}
 		}
