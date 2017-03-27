@@ -90,7 +90,7 @@
 	},
 	"variables": {
 		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'highPerformanceDeployment.json','')]",
-		"vnetRef": "[resourceId('ttvdsoxresg001','Microsoft.Network/virtualNetworks', parameters('existingVirtualNetworkName'))]",
+		"vnetRef": "[resourceId('ttvdsolresg001','Microsoft.Network/virtualNetworks', parameters('existingVirtualNetworkName'))]",
 		"subnetRef": "[concat(variables('vnetRef'),'/subnets/', parameters('existingSubnetName'))]",
 		"sofsName": "[concat(parameters('namePrefix'),'sofs')]",
 		"shareName": "[concat(parameters('namePrefix'),'shar')]",

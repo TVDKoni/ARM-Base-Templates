@@ -1,4 +1,4 @@
-$SolutionPrefix = "ttvdsox"
+$SolutionPrefix = "ttvdsol"
 $AzureSubscriptionName = "Microsoft Azure"
 $ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroupLocation = "West Europe"
@@ -20,6 +20,3 @@ New-AzureRmResourceGroup @ResourceGroup
 New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose
 
 pause
-
-
-
