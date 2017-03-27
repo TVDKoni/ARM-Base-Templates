@@ -90,8 +90,9 @@
 	},
 	"variables": {
 		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'highPerformanceDeployment.json','')]",
-		"vnetRef": "[resourceId('ttvdsoxresg001','Microsoft.Network/virtualNetworks', parameters('existingVirtualNetworkName'))]",
-		"subnetRef": "[concat(variables('vnetRef'),'/subnets/', parameters('existingSubnetName'))]",
+		"vnetRef1": "[resourceId('ttvdsoxresg001','Microsoft.Network/virtualNetworks', parameters('existingVirtualNetworkName'))]",
+		"subnetRef1": "[concat(variables('vnetRef1'),'/subnets/', parameters('existingSubnetName'))]",
+		"subnetRef": "[resourceId('ttvdsoxresg001','Microsoft.Network/virtualNetworks/subnets',parameters('existingVirtualNetworkName'),parameters('existingSubnetName'))]",
 		"sofsName": "[concat(parameters('namePrefix'),'sofs')]",
 		"shareName": "[concat(parameters('namePrefix'),'shar')]",
 		"adminUsername": "sysadmin",
