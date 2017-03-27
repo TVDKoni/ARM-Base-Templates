@@ -13,7 +13,7 @@ $TemplateParameters = @{
 	osVersion = "2016"
 	adminPassword = "PleaseSpecify"
 	existingVirtualNetworkName = "ttvdsolvnet001"
-	existingSubnetName = "ttvdsolsnet001"
+	existingSubnetName = "ttvdsolsnet001managementServices"
 }
 $ResourceGroup = @{
     Name = $ResourceGroupName

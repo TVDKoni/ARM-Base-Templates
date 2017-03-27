@@ -62,6 +62,7 @@
 			"emergencySubnetName": "[concat(parameters('namePrefix'),'snet001emergencyServices')]",
 			"emergencySubnetAddressPrefix": "10.3.4.0/24",
 			"emergencyNetworkSecurityGroupName": "[concat(parameters('namePrefix'),'nscg001emergencyServices')]",
+			"gatewaySubnetName": "[concat(parameters('namePrefix'),'snet001gateway')]",
 			"gatewaySubnetAddressPrefix": "10.3.5.0/24",
 			"templateUri": "[variables('baseTemplateUri')]"
 		},
@@ -85,7 +86,7 @@
 					"contentVersion": "1.0.0.0"
 				},
 				"parameters": {
-					"virtualNetwork": {
+					"virtualNetworkSettings": {
 						"value": "[variables('virtualNetworkSettings')]"
 					}
 				}

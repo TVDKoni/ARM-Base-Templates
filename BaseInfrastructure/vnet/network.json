@@ -2,7 +2,7 @@
 	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"virtualNetwork": {
+		"virtualNetworkSettings": {
 			"type": "object",
 			"metadata": {
 				"description": "The virtual network object"
@@ -21,7 +21,7 @@
 	"resources": [{
 			"apiVersion": "[variables('apiversion').network.networkSecurityGroups]",
 			"type": "Microsoft.Network/networkSecurityGroups",
-			"name": "[parameters('virtualNetwork').managementNetworkSecurityGroupName]",
+			"name": "[parameters('virtualNetworkSettings').managementNetworkSecurityGroupName]",
 			"location": "[resourceGroup().location]",
 			"tags": {
 				"displayName": "NSG - Default Subnet"
@@ -71,11 +71,11 @@
 			}
 		}, {
 			"type": "Microsoft.Network/virtualNetworks",
-			"name": "[parameters('virtualNetwork').Name]",
+			"name": "[parameters('virtualNetworkSettings').Name]",
 			"apiVersion": "[variables('apiVersion').network.virtualNetwork]",
 			"location": "[variables('resourceLocation')]",
 			"dependsOn": [
-				"[concat('Microsoft.Network/networkSecurityGroups/', parameters('virtualNetwork').managementNetworkSecurityGroupName)]"
+				"[concat('Microsoft.Network/networkSecurityGroups/', parameters('virtualNetworkSettings').managementNetworkSecurityGroupName)]"
 			],
 			"tags": {
 				"displayName": "VNET - SBS"
@@ -83,21 +83,21 @@
 			"properties": {
 				"addressSpace": {
 					"addressPrefixes": [
-						"[parameters('virtualNetwork').addressPrefix]"
+						"[parameters('virtualNetworkSettings').addressPrefix]"
 					]
 				},
 				"subnets": [{
-						"name": "[parameters('virtualNetwork').ManagementSubnetName]",
+						"name": "[parameters('virtualNetworkSettings').ManagementSubnetName]",
 						"properties": {
-							"addressPrefix": "[parameters('virtualNetwork').managementSubnetAddressPrefix]",
+							"addressPrefix": "[parameters('virtualNetworkSettings').managementSubnetAddressPrefix]",
 							"networkSecurityGroup": {
-								"id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('virtualNetwork').managementNetworkSecurityGroupName)]"
+								"id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('virtualNetworkSettings').managementNetworkSecurityGroupName)]"
 							}
 						}
 					}, {
-						"name": "GatewaySubnet",
+						"name": "[parameters('virtualNetworkSettings').gatewaySubnetName]",
 						"properties": {
-							"addressPrefix": "[parameters('virtualNetwork').gatewaySubnetAddressPrefix]"
+							"addressPrefix": "[parameters('virtualNetworkSettings').gatewaySubnetAddressPrefix]"
 						}
 					}
 				]
