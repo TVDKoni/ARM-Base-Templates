@@ -4,6 +4,15 @@ $ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroupLocation = "West Europe"
 $TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/BaseInfrastructure/baseInfrastructureDeployment.json"
 
+<#
+	Attention: Provisioning a vpn gateway can take up to 20 minutes!
+	Available vpnGateway: 
+		- none
+		- basic
+		- standard
+		- highperformace
+#>
+
 $TemplateParameters = @{
     namePrefix = $SolutionPrefix
     vpnGateway = "basic"
