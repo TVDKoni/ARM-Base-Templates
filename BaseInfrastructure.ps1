@@ -1,8 +1,6 @@
 $SolutionPrefix = "ttvdsol"
 $AzureSubscriptionName = "Microsoft Azure"
-$ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroupLocation = "West Europe"
-$TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/BaseInfrastructure/baseInfrastructureDeployment.json"
 
 <#
 	Attention: Provisioning a vpn gateway can take up to 20 minutes!
@@ -17,11 +15,13 @@ $TemplateParameters = @{
     namePrefix = $SolutionPrefix
     vpnGateway = "basic"
 }
+$ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroup = @{
     Name = $ResourceGroupName
     Location = $ResourceGroupLocation
     Force = $true
 }
+$TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/BaseInfrastructure/baseInfrastructureDeployment.json"
 
 Login-AzureRmAccount
 Get-AzureRmSubscription –SubscriptionName $AzureSubscriptionName | Select-AzureRmSubscription

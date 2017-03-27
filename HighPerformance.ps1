@@ -1,8 +1,6 @@
 $SolutionPrefix = "ttvdsol"
 $AzureSubscriptionName = "Microsoft Azure"
-$ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroupLocation = "West Europe"
-$TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/HighPerformance/highPerformanceDeployment.json"
 
 <#
 	Attention: 
@@ -34,20 +32,22 @@ $TemplateParameters = @{
     namePrefix = $SolutionPrefix
 	storageAccountType = "Standard_LRS"
 	vmCount = 1
-	vmSize = "Standard_DS1_v2"
-	vmDiskCount = 2
+	vmSize = "Standard_DS4_v2"
+	vmDiskCount = 16
 	vmDiskSize = 1023
-	vmStartIndex = 4
+	vmStartIndex = 1
 	osVersion = "2016"
 	adminPassword = "1Please-Specify3"
 	existingVirtualNetworkName = "ttvdsolvnet001"
 	existingSubnetName = "ttvdsolsnet001managementServices"
 }
+$ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroup = @{
     Name = $ResourceGroupName
     Location = $ResourceGroupLocation
     Force = $true
 }
+$TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/HighPerformance/highPerformanceDeployment.json"
 
 Login-AzureRmAccount
 Get-AzureRmSubscription –SubscriptionName $AzureSubscriptionName | Select-AzureRmSubscription
