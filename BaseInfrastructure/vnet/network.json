@@ -95,7 +95,7 @@
 							}
 						}
 					}, {
-						"name": "[parameters('virtualNetworkSettings').gatewaySubnetName]",
+						"name": "GatewaySubnet",
 						"properties": {
 							"addressPrefix": "[parameters('virtualNetworkSettings').gatewaySubnetAddressPrefix]"
 						}
