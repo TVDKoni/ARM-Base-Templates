@@ -101,8 +101,6 @@
 		"baseTemplateUri": "[replace(string(deployment().properties.templateLink.uri),'highPerformanceDeployment.json','')]",
 		"vnetRef": "[resourceId('ttvdsolresg001','Microsoft.Network/virtualNetworks', parameters('existingVirtualNetworkName'))]",
 		"subnetRef": "[concat(variables('vnetRef'),'/subnets/', parameters('existingSubnetName'))]",
-		"sofsName": "[concat(parameters('namePrefix'),'sofs')]",
-		"shareName": "[concat(parameters('namePrefix'),'shar')]",
 		"adminUsername": "sysadmin",
 		"OSVersion": {
 			"2012R2": "2012-R2-Datacenter",
@@ -150,12 +148,6 @@
 					},
 					"vmDiskCount": {
 						"value": "[parameters('vmDiskCount')]"
-					},
-					"sofsName": {
-						"value": "[variables('sofsName')]"
-					},
-					"shareName": {
-						"value": "[variables('shareName')]"
 					},
 					"imageSKU": {
 						"value": "[variables('OSVersion')[parameters('osVersion')]]"

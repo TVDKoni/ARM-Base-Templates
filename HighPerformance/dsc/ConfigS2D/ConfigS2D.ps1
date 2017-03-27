@@ -1,11 +1,5 @@
-configuration S2D
+configuration ConfigS2D
 {
-    param
-    (
-        [Int]$RetryCount=20,
-        [Int]$RetryIntervalSec=30
-    )
-
     Import-Module Storage
 
     $storagePool = New-StoragePool -FriendlyName "DataPool" `

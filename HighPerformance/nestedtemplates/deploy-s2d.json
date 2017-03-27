@@ -80,18 +80,6 @@
 				"description": "Number of data disks on each S2D VM (Min=2, Max=32). Ensure that the VM size you've selected will support this number of data disks."
 			}
 		},
-		"sofsName": {
-			"type": "string",
-			"metadata": {
-				"description": "Name of clustered Scale-Out File Server role"
-			}
-		},
-		"shareName": {
-			"type": "string",
-			"metadata": {
-				"description": "Name of shared data folder on clustered Scale-Out File Server role"
-			}
-		},
 		"imagePublisher": {
 			"type": "string",
 			"defaultValue": "MicrosoftWindowsServer"
@@ -118,12 +106,10 @@
 		"apiVersionNetwork": "2015-06-15",
 		"vmNamePrefix": "[concat(parameters('namePrefix'),'serv')]",
 		"storageNamePrefix": "[concat(parameters('namePrefix'),'strg')]",
-		"witnessStorageName": "[concat(parameters('namePrefix'),'wnes')]",
-		"witnessStorageType": "Standard_LRS",
-		"vmAvailabilitySetName": "[concat(parameters('namePrefix'),'aset')]",
+		"vmAvailabilitySetName": "[concat(parameters('namePrefix'),'aset', padLeft(parameters('vmStartIndex'),3,'0'))]",
 		"vmLoopTemplateURL": "[concat(parameters('baseTemplateUri'),'/nestedtemplates/newVM.json')]",
-		"s2dModulesURL": "[concat(parameters('baseTemplateUri'),'/dsc/s2d.zip')]",
-		"s2dFunction": "S2D.ps1\\S2D"
+		"s2dModulesURL": "[concat(parameters('baseTemplateUri'),'/dsc/ConfigS2D.zip')]",
+		"s2dFunction": "ConfigS2D.ps1\\ConfigS2D"
 	},
 	"resources": [{
 			"type": "Microsoft.Compute/availabilitySets",
@@ -131,15 +117,6 @@
 			"apiVersion": "[variables('apiVersionCompute')]",
 			"location": "[resourceGroup().location]",
 			"properties": {}
-		}, {
-			"type": "Microsoft.Storage/storageAccounts",
-			"name": "[variables('witnessStorageName')]",
-			"apiVersion": "[variables('apiVersionStorage')]",
-			"location": "[resourceGroup().location]",
-			"sku": {
-				"name": "[variables('witnessStorageType')]"
-			},
-			"kind": "Storage"
 		}, {
 			"type": "Microsoft.Storage/storageAccounts",
 			"name": "[concat(variables('storageNamePrefix'), padLeft(copyindex(parameters('vmStartIndex')),3,'0'))]",
