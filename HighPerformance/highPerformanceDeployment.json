@@ -7,7 +7,7 @@
 			"minLength": 3,
 			"maxLength": 7,
 			"metadata": {
-				"description": "Naming prefix for each new resource created. 3-char min, 8-char max, lowercase alphanumeric"
+				"description": "Naming prefix for each new resource created. 3-char min, 8-char max, lowercase, alphanumeric"
 			},
 			"defaultValue": "ttvdsol"
 		},

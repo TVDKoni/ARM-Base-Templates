@@ -1,4 +1,4 @@
-$SolutionPrefix = "ttvdsol"
+$SolutionPrefix = "tamberg"
 $AzureSubscriptionName = "Microsoft Azure"
 $ResourceGroupLocation = "West Europe"
 
@@ -35,11 +35,11 @@ $TemplateParameters = @{
 	vmSize = "Standard_DS4_v2"
 	vmDiskCount = 16
 	vmDiskSize = 1023
-	vmStartIndex = 1
+	vmStartIndex = 7
 	osVersion = "2016"
 	adminPassword = "1Please-Specify3"
-	existingVirtualNetworkName = "ttvdsolvnet001"
-	existingSubnetName = "ttvdsolsnet001managementServices"
+	existingVirtualNetworkName = "tambergvnet001"
+	existingSubnetName = "tambergnscg001managementServices"
 }
 $ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroup = @{
