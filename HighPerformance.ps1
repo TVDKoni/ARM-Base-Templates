@@ -1,10 +1,10 @@
-$SolutionPrefix = "tamberg"
+$SolutionPrefix = "ttvdsol"
 $AzureSubscriptionName = "Microsoft Azure"
 $ResourceGroupLocation = "West Europe"
 
 <#
 	Attention: 
-		- Standard_LRS is the most performing storage type!
+		- LRS is the most performing storage type! Premium_LRS is on SSD.
 		- Max number of disks with max size is the most performing configuration
 		- Admin user name is fixed: sysadmin
 		- Please increase vmStartIndex if you run this script multiple times in same resource group
@@ -30,16 +30,16 @@ $ResourceGroupLocation = "West Europe"
 
 $TemplateParameters = @{
     namePrefix = $SolutionPrefix
-	storageAccountType = "Standard_LRS"
+	storageAccountType = "Premium_LRS"
 	vmCount = 1
-	vmSize = "Standard_DS4_v2"
-	vmDiskCount = 16
+	vmSize = "Standard_DS5_v2"
+	vmDiskCount = 2
 	vmDiskSize = 1023
-	vmStartIndex = 7
+	vmStartIndex = 1
 	osVersion = "2016"
 	adminPassword = "1Please-Specify3"
-	existingVirtualNetworkName = "tambergvnet001"
-	existingSubnetName = "tambergnscg001managementServices"
+	existingVirtualNetworkName = ($SolutionPrefix + "vnet001")
+	existingSubnetName = ($SolutionPrefix + "snet001managementServices")
 }
 $ResourceGroupName = ($SolutionPrefix + "resg001")
 $ResourceGroup = @{
