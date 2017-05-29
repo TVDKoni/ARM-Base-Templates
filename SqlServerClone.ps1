@@ -17,14 +17,14 @@ $TemplateParameters = @{
     adminPassword = $adminPassword
     sqlAuthenticationPassword = $adminPassword
     location = $ResourceGroupLocation
-    virtualMachineName = $SolutionPrefix + "vser001"
+    virtualMachineName = $SolutionPrefix + "vser101"
     adminUsername = $SolutionPrefix + "vadmin"
     virtualNetworkName = $SolutionPrefix + "vnet001"
-    networkInterfaceName = $SolutionPrefix + "vser001nic"
+    networkInterfaceName = $SolutionPrefix + "vser101nic"
     storageAccountName = $SolutionPrefix + "stac001"
     diagnosticsStorageAccountName = $SolutionPrefix + "stac002"
     subnetName = $SolutionPrefix + "snet001managementServices"
-    publicIpAddressName = $SolutionPrefix + "vser001pip"
+    publicIpAddressName = $SolutionPrefix + "vser101pip"
     sqlAuthenticationLogin = $SolutionPrefix + "vadmin"
     virtualMachineSize = $VirtualMachineSize
     storageAccountType = "Premium_LRS"
@@ -91,7 +91,7 @@ $TemplateParameters.osDiskUri = $storageProfile.osDisk.image.uri
 $TemplateParameters.dataDiskUri = $storageProfile.dataDisks[0].image.uri
 
 Write-Host "Deploying template"
-$deployment =New-AzureRmResourceGroupDeployment -ResourceGroupName $DestResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose
+$deployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $DestResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose
 
 Write-Host "Template outputs:"
 foreach($key in $deployment.Outputs.Keys)
