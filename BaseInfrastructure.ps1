@@ -1,6 +1,7 @@
 $SolutionPrefix = "ttvdtrn"
 $AzureSubscriptionName = "Microsoft Azure"
 $ResourceGroupLocation = "West Europe"
+$VpnGateway = "none"
 
 <#
 	Attention: Provisioning a vpn gateway can take up to 20 minutes!
@@ -13,35 +14,26 @@ $ResourceGroupLocation = "West Europe"
 
 $TemplateParameters = @{
     namePrefix = $SolutionPrefix
-    vpnGateway = "basic"
+    vpnGateway = $VpnGateway
 }
 $ResourceGroupName = ($SolutionPrefix + "resg001")
-$ResourceGroup = @{
-    Name = $ResourceGroupName
-    Location = $ResourceGroupLocation
-    Force = $true
-}
 $TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/BaseInfrastructure/baseInfrastructureDeployment.json"
 
+Write-Host "Login to azure account"
 Login-AzureRmAccount
-Get-AzureRmSubscription –SubscriptionName $AzureSubscriptionName | Select-AzureRmSubscription
 
-
-Write-Host "Selecting subscription as default"
+Write-Host "Selecting subscription '$($AzureSubscriptionName)'"
 $subscription = Get-AzureRmSubscription –SubscriptionName $AzureSubscriptionName #add -TenantId if subscription name is not unique
-Select-AzureRmSubscription -SubscriptionId $subscription.SubscriptionId
+Select-AzureRmSubscription -SubscriptionId $subscription.SubscriptionId | Out-String | Write-Verbose
 
-
-
-Write-Host "Creating resource group '$($resourceGroupName)' to hold the automation account, key vault, and template storage account."
-
-if (-not (Get-AzureRmResourceGroup -Name $resourceGroupName -Location $location -ErrorAction SilentlyContinue)) {
-	New-AzureRmResourceGroup -Name $resourceGroupName -Location $location  | Out-String | Write-Verbose
+Write-Host "Getting resource group '$($ResourceGroupName)'"
+if (-not (Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -ErrorAction SilentlyContinue)) {
+	Write-Host "Resource group does not exists. Creating it."
+	New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation | Out-String | Write-Verbose
 }
 
+Write-Host "Deploying template"
+New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose | Out-String | Write-Verbose
 
-
-New-AzureRmResourceGroup @ResourceGroup
-New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose
-
+Write-Host "Done"
 pause

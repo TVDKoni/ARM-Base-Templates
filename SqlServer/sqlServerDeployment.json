@@ -1,0 +1,313 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"location": {
+			"type": "string"
+		},
+		"virtualMachineName": {
+			"type": "string"
+		},
+		"virtualMachineSize": {
+			"type": "string"
+		},
+		"adminUsername": {
+			"type": "string"
+		},
+		"virtualNetworkName": {
+			"type": "string"
+		},
+		"networkInterfaceName": {
+			"type": "string"
+		},
+		"adminPassword": {
+			"type": "securestring"
+		},
+		"storageAccountName": {
+			"type": "string"
+		},
+		"storageAccountType": {
+			"type": "string"
+		},
+		"diagnosticsStorageAccountName": {
+			"type": "string"
+		},
+		"diagnosticsStorageAccountId": {
+			"type": "string"
+		},
+		"diagnosticsStorageAccountType": {
+			"type": "string"
+		},
+		"subnetName": {
+			"type": "string"
+		},
+		"publicIpAddressName": {
+			"type": "string"
+		},
+		"publicIpAddressType": {
+			"type": "string"
+		},
+		"sqlConnectivityType": {
+			"type": "string"
+		},
+		"sqlPortNumber": {
+			"type": "int"
+		},
+		"sqlStorageDisksCount": {
+			"type": "int"
+		},
+		"sqlStorageWorkloadType": {
+			"type": "string"
+		},
+		"sqlStorageDisksConfigurationType": {
+			"type": "string"
+		},
+		"sqlStorageStartingDeviceId": {
+			"type": "int"
+		},
+		"sqlStorageDeploymentToken": {
+			"type": "int"
+		},
+		"sqlAutopatchingDayOfWeek": {
+			"type": "string"
+		},
+		"sqlAutopatchingStartHour": {
+			"type": "string"
+		},
+		"sqlAutopatchingWindowDuration": {
+			"type": "string"
+		},
+		"sqlAuthenticationLogin": {
+			"type": "string"
+		},
+		"sqlAuthenticationPassword": {
+			"type": "securestring"
+		},
+		"rServicesEnabled": {
+			"type": "string"
+		}
+	},
+	"variables": {
+		"vnetId": "[resourceId('ttvdtrnresg001','Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+		"subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+	},
+	"resources": [{
+			"name": "[parameters('virtualMachineName')]",
+			"type": "Microsoft.Compute/virtualMachines",
+			"apiVersion": "2016-04-30-preview",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]",
+				"[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+				"[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticsStorageAccountName'))]"
+			],
+			"properties": {
+				"osProfile": {
+					"computerName": "[parameters('virtualMachineName')]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"adminPassword": "[parameters('adminPassword')]",
+					"windowsConfiguration": {
+						"provisionVmAgent": "true"
+					}
+				},
+				"hardwareProfile": {
+					"vmSize": "[parameters('virtualMachineSize')]"
+				},
+				"storageProfile": {
+					"imageReference": {
+						"publisher": "MicrosoftSQLServer",
+						"offer": "SQL2016SP1-WS2016",
+						"sku": "Enterprise",
+						"version": "latest"
+					},
+					"osDisk": {
+						"createOption": "fromImage",
+						"vhd": {
+							"uri": "[concat(concat(reference(resourceId('ttvdtrnresg001', 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '20170529142048.vhd')]"
+						},
+						"name": "[parameters('virtualMachineName')]"
+					},
+					"dataDisks": [{
+							"name": "[concat(parameters('virtualMachineName'), '-disk-1')]",
+							"createOption": "empty",
+							"lun": 0,
+							"diskSizeGB": "1023",
+							"caching": "ReadOnly",
+							"vhd": {
+								"uri": "[concat(concat(reference(resourceId('ttvdtrnresg001', 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-disk-1-20170529142048', '.vhd')]"
+							}
+						}
+					]
+				},
+				"networkProfile": {
+					"networkInterfaces": [{
+							"id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
+						}
+					]
+				},
+				"diagnosticsProfile": {
+					"bootDiagnostics": {
+						"enabled": true,
+						"storageUri": "[reference(resourceId('ttvdtrnresg001', 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName')), '2015-06-15').primaryEndpoints['blob']]"
+					}
+				}
+			}
+		}, {
+			"name": "microsoft.antimalware-windows-20170529141643",
+			"apiVersion": "2015-01-01",
+			"type": "Microsoft.Resources/deployments",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "https://gallery.azure.com/artifact/20161101/microsoft.antimalware-windows-arm.1.0.0/Artifacts/MainTemplate.json"
+				},
+				"parameters": {
+					"vmName": {
+						"value": "ttvdtrnvser001"
+					},
+					"location": {
+						"value": "westeurope"
+					},
+					"ExclusionsExtensions": {
+						"value": ".mdf;.ldf;.ndf"
+					},
+					"RealtimeProtectionEnabled": {
+						"value": "true"
+					},
+					"ScheduledScanSettingsIsEnabled": {
+						"value": "false"
+					},
+					"ScheduledScanSettingsScanType": {
+						"value": "Quick"
+					},
+					"ScheduledScanSettingsDay": {
+						"value": "7"
+					},
+					"ScheduledScanSettingsTime": {
+						"value": "120"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+			]
+		}, {
+			"apiVersion": "2015-06-15",
+			"type": "Microsoft.Compute/virtualMachines/extensions",
+			"name": "[concat(parameters('virtualMachineName'), '/SqlIaasExtension')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]",
+				"microsoft.antimalware-windows-20170529141643"
+			],
+			"properties": {
+				"type": "SqlIaaSAgent",
+				"publisher": "Microsoft.SqlServer.Management",
+				"typeHandlerVersion": "1.2",
+				"autoUpgradeMinorVersion": "true",
+				"settings": {
+					"AutoTelemetrySettings": {
+						"Region": "[parameters('location')]"
+					},
+					"AutoPatchingSettings": {
+						"PatchCategory": "WindowsMandatoryUpdates",
+						"Enable": true,
+						"DayOfWeek": "[parameters('sqlAutopatchingDayOfWeek')]",
+						"MaintenanceWindowStartingHour": "[parameters('sqlAutopatchingStartHour')]",
+						"MaintenanceWindowDuration": "[parameters('sqlAutopatchingWindowDuration')]"
+					},
+					"KeyVaultCredentialSettings": {
+						"Enable": false,
+						"CredentialName": ""
+					},
+					"ServerConfigurationsManagementSettings": {
+						"SQLConnectivityUpdateSettings": {
+							"ConnectivityType": "[parameters('sqlConnectivityType')]",
+							"Port": "[parameters('sqlPortNumber')]"
+						},
+						"SQLWorkloadTypeUpdateSettings": {
+							"SQLWorkloadType": "[parameters('sqlStorageWorkloadType')]"
+						},
+						"SQLStorageUpdateSettings": {
+							"DiskCount": "[parameters('sqlStorageDisksCount')]",
+							"NumberOfColumns": "[parameters('sqlStorageDisksCount')]",
+							"StartingDeviceID": "[parameters('sqlStorageStartingDeviceId')]",
+							"DiskConfigurationType": "[parameters('sqlStorageDisksConfigurationType')]"
+						},
+						"AdditionalFeaturesServerConfigurations": {
+							"IsRServicesEnabled": "[parameters('rServicesEnabled')]"
+						}
+					}
+				},
+				"protectedSettings": {
+					"SQLAuthUpdateUserName": "[parameters('sqlAuthenticationLogin')]",
+					"SQLAuthUpdatePassword": "[parameters('sqlAuthenticationPassword')]"
+				}
+			}
+		}, {
+			"name": "[parameters('storageAccountName')]",
+			"type": "Microsoft.Storage/storageAccounts",
+			"apiVersion": "2015-06-15",
+			"location": "[parameters('location')]",
+			"properties": {
+				"accountType": "[parameters('storageAccountType')]"
+			}
+		}, {
+			"name": "[parameters('diagnosticsStorageAccountName')]",
+			"type": "Microsoft.Storage/storageAccounts",
+			"apiVersion": "2015-06-15",
+			"location": "[parameters('location')]",
+			"properties": {
+				"accountType": "[parameters('diagnosticsStorageAccountType')]"
+			}
+		}, {
+			"name": "[parameters('networkInterfaceName')]",
+			"type": "Microsoft.Network/networkInterfaces",
+			"apiVersion": "2016-09-01",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Network/publicIpAddresses/', parameters('publicIpAddressName'))]"
+			],
+			"properties": {
+				"ipConfigurations": [{
+						"name": "ipconfig1",
+						"properties": {
+							"subnet": {
+								"id": "[variables('subnetRef')]"
+							},
+							"privateIPAllocationMethod": "Dynamic",
+							"publicIpAddress": {
+								"id": "[resourceId('ttvdtrnresg001','Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
+							}
+						}
+					}
+				]
+			}
+		}, {
+			"name": "[parameters('publicIpAddressName')]",
+			"type": "Microsoft.Network/publicIpAddresses",
+			"apiVersion": "2016-09-01",
+			"location": "[parameters('location')]",
+			"properties": {
+				"publicIpAllocationMethod": "[parameters('publicIpAddressType')]",
+				"dnsSettings": {
+					"domainNameLabel": "[tolower(parameters('virtualMachineName'))]"
+				}
+			}
+		}
+	],
+	"outputs": {
+		"adminUsername": {
+			"type": "string",
+			"value": "[parameters('adminUsername')]"
+		},
+		"sqlAuthenticationLogin": {
+			"type": "string",
+			"value": "[parameters('sqlAuthenticationLogin')]"
+		},
+		"domainNameLabel": {
+			"type": "string",
+			"value": "[concat(tolower(parameters('virtualMachineName')), '.', tolower(parameters('location')), '.cloudapp.azure.com')]"
+		}
+	}
+}
