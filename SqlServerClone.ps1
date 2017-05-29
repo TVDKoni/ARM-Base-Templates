@@ -6,11 +6,13 @@ $VirtualMachineSize = "Standard_DS12_v2"
 $adminPasswordSec = Read-host "Admin and SQL password?" -AsSecureString
 $adminPasswordBSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($adminPasswordSec)
 $adminPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($adminPasswordBSTR)
+$numVmcopies = Read-host "Number of copies to be created?"
 
 $SourceResourceGroupName = ($SolutionPrefix + "resg001")
 $DestResourceGroupName = ($SolutionPrefix + "resg002")
 $TemplateParameters = @{
 	destResourceGroupName = $DestResourceGroupName
+	numberOfVms = $numVmcopies
 	sourceResourceGroupName = $SourceResourceGroupName
     adminPassword = $adminPassword
     sqlAuthenticationPassword = $adminPassword

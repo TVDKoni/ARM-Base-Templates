@@ -2,6 +2,9 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
+		"numberOfVms": {
+			"type": "int"
+		},
 		"destResourceGroupName": {
 			"type": "string"
 		},
@@ -101,7 +104,9 @@
 	},
 	"variables": {
 		"vnetId": "[resourceId(parameters('sourceResourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-		"subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+		"subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+		"osDiskImageName": "SqlServerOsDiskImage",
+		"dataDiskImageName": "SqlServerDataDiskImage"
 	},
 	"resources": [{
 			"name": "[parameters('virtualMachineName')]",
@@ -127,6 +132,7 @@
 				},
 				"storageProfile": {
 					"imageReference": {
+						"id": "[resourceId('Microsoft.Compute/images', variables('imageName'))]"
 						"publisher": "MicrosoftSQLServer",
 						"offer": "SQL2016SP1-WS2016",
 						"sku": "Enterprise",
@@ -134,6 +140,9 @@
 					},
 					"osDisk": {
 						"createOption": "fromImage",
+						"image": {
+							"uri": "[parameters('osDiskUri')]"
+						},
 						"vhd": {
 							"uri": "[concat(concat(reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-osdisk.vhd')]"
 						},
@@ -141,10 +150,12 @@
 					},
 					"dataDisks": [{
 							"name": "[concat(parameters('virtualMachineName'), '-disk-1')]",
-							"createOption": "empty",
+							"createOption": "fromImage",
 							"lun": 0,
-							"diskSizeGB": "1023",
 							"caching": "ReadOnly",
+							"image": {
+								"uri": "[parameters('dataDiskUri')]"
+							},
 							"vhd": {
 								"uri": "[concat(concat(reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-datadisk', '.vhd')]"
 							}
