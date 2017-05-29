@@ -5,6 +5,9 @@
 		"resourceGroupName": {
 			"type": "string"
 		},
+		"sourceResourceGroupName": {
+			"type": "string"
+		},
 		"location": {
 			"type": "string"
 		},
@@ -91,7 +94,7 @@
 		}
 	},
 	"variables": {
-		"vnetId": "[resourceId(parameters('resourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+		"vnetId": "[resourceId(parameters('sourceResourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
 		"subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
 	},
 	"resources": [{
@@ -126,7 +129,7 @@
 					"osDisk": {
 						"createOption": "fromImage",
 						"vhd": {
-							"uri": "[concat(concat(reference(resourceId(parameters('resourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-osdisk.vhd')]"
+							"uri": "[concat(concat(reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-osdisk.vhd')]"
 						},
 						"name": "[parameters('virtualMachineName')]"
 					},
@@ -137,7 +140,7 @@
 							"diskSizeGB": "1023",
 							"caching": "ReadOnly",
 							"vhd": {
-								"uri": "[concat(concat(reference(resourceId(parameters('resourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-datadisk', '.vhd')]"
+								"uri": "[concat(concat(reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-datadisk', '.vhd')]"
 							}
 						}
 					]
@@ -151,7 +154,7 @@
 				"diagnosticsProfile": {
 					"bootDiagnostics": {
 						"enabled": true,
-						"storageUri": "[reference(resourceId(parameters('resourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName')), '2015-06-15').primaryEndpoints['blob']]"
+						"storageUri": "[reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName')), '2015-06-15').primaryEndpoints['blob']]"
 					}
 				}
 			}

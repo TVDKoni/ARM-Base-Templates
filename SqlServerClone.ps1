@@ -7,21 +7,23 @@ $adminPasswordSec = Read-host "Admin and SQL password?" -AsSecureString
 $adminPasswordBSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($adminPasswordSec)
 $adminPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($adminPasswordBSTR)
 
-$ResourceGroupName = ($SolutionPrefix + "resg001")
+$SourceResourceGroupName = ($SolutionPrefix + "resg001")
+$ResourceGroupName = ($SolutionPrefix + "resg002")
 $TemplateParameters = @{
 	resourceGroupName = $ResourceGroupName
+	sourceResourceGroupName = $SourceResourceGroupName
     adminPassword = $adminPassword
     sqlAuthenticationPassword = $adminPassword
     location = $ResourceGroupLocation
     virtualMachineName = $SolutionPrefix + "vser001"
-    adminUsername = $SolutionPrefix + "admin"
+    adminUsername = $SolutionPrefix + "vadmin"
     virtualNetworkName = $SolutionPrefix + "vnet001"
     networkInterfaceName = $SolutionPrefix + "vser001nic"
     storageAccountName = $SolutionPrefix + "stac001"
     diagnosticsStorageAccountName = $SolutionPrefix + "stac002"
     subnetName = $SolutionPrefix + "snet001managementServices"
     publicIpAddressName = $SolutionPrefix + "vser001pip"
-    sqlAuthenticationLogin = $SolutionPrefix + "admin"
+    sqlAuthenticationLogin = $SolutionPrefix + "vadmin"
     virtualMachineSize = $VirtualMachineSize
     storageAccountType = "Premium_LRS"
     diagnosticsStorageAccountType = "Standard_LRS"
@@ -39,7 +41,20 @@ $TemplateParameters = @{
     sqlAutopatchingWindowDuration = "60"
     rServicesEnabled = "true"
 }
-$TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/SqlServer/sqlServerDeployment.json"
+$TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/SqlServerClone/sqlServerCloneDeployment.json"
+
+function New-TemporaryDirectory
+{
+    $path = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+    while(Test-Path $path) {
+        $path = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+    }
+    New-Item -ItemType Directory -Path $path
+}
+
+Write-Host "Please prepare first the source image like described in:"
+Write-Host "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/SqlServerClone/PrepareVmImage.pdf"
+pause
 
 Write-Host "Login to azure account"
 Login-AzureRmAccount
@@ -53,6 +68,21 @@ if (-not (Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceG
 	Write-Host "Resource group does not exists. Creating it."
 	New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation | Out-String | Write-Verbose
 }
+
+Write-Host "Preparing the source vm '$($SolutionPrefix)vser001'"
+Stop-AzureRmVM -ResourceGroupName $SourceResourceGroupName -Name ($SolutionPrefix + "vser001") -Force
+Set-AzureRmVM -ResourceGroupName $SourceResourceGroupName -Name ($SolutionPrefix + "vser001") -Generalized  
+
+$tempdir = New-TemporaryDirectory
+$tempfile = $tempdir.FullName + "\Template.json"
+Write-Host "Saving the source vm '$($SolutionPrefix)vser001' as template to $($tempfile)"
+Save-AzureRmVMImage -ResourceGroupName $SourceResourceGroupName -VMName ($SolutionPrefix + "vser001") -DestinationContainerName 'templates' -VHDNamePrefix 'template' -Path $tempfile
+
+Write-Host "Reading template"
+$template = (Get-Content $tempfile) -join "`n" | ConvertFrom-Json
+$storageProfile = $template.resources[0].properties.storageProfile
+
+#TODO source image param
 
 Write-Host "Deploying template"
 New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose | Out-String | Write-Verbose
