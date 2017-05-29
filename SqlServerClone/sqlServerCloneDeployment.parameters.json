@@ -2,7 +2,7 @@
 	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"resourceGroupName": {
+		"destResourceGroupName": {
 			"value": "ttvdtrnresg002"
 		},
 		"sourceResourceGroupName": {
@@ -10,6 +10,12 @@
 		},
 		"location": {
 			"value": "westeurope"
+		},
+		"osDiskUri": {
+			"value": "https://ttvdtrnstac001.blob.core.windows.net/system/Microsoft.Compute/Images/templates/template-osDisk.584cfccc-637f-4c36-85cd-f33771822bea.vhd"
+		},
+		"dataDiskUri": {
+			"value": "https://ttvdtrnstac001.blob.core.windows.net/system/Microsoft.Compute/Images/templates/template-dataDisk-0.584cfccc-637f-4c36-85cd-f33771822bea.vhd"
 		},
 		"virtualMachineName": {
 			"value": "ttvdtrnvser001"

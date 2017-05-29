@@ -8,9 +8,9 @@ $adminPasswordBSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBST
 $adminPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($adminPasswordBSTR)
 
 $SourceResourceGroupName = ($SolutionPrefix + "resg001")
-$ResourceGroupName = ($SolutionPrefix + "resg002")
+$DestResourceGroupName = ($SolutionPrefix + "resg002")
 $TemplateParameters = @{
-	resourceGroupName = $ResourceGroupName
+	destResourceGroupName = $DestResourceGroupName
 	sourceResourceGroupName = $SourceResourceGroupName
     adminPassword = $adminPassword
     sqlAuthenticationPassword = $adminPassword
@@ -40,6 +40,8 @@ $TemplateParameters = @{
     sqlAutopatchingStartHour = "2"
     sqlAutopatchingWindowDuration = "60"
     rServicesEnabled = "true"
+    osDiskUri = "LaterConfigured"
+    dataDiskUri = "LaterConfigured"
 }
 $TemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/SqlServerClone/sqlServerCloneDeployment.json"
 
@@ -54,6 +56,8 @@ function New-TemporaryDirectory
 
 Write-Host "Please prepare first the source image like described in:"
 Write-Host "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/SqlServerClone/PrepareVmImage.pdf"
+Write-Host '  - Run command: & "$Env:SystemRoot\system32\sysprep\sysprep.exe" /generalize /oobe /shutdown'
+Write-Host '  - Wait until the vm has stopped state'
 pause
 
 Write-Host "Login to azure account"
@@ -63,10 +67,10 @@ Write-Host "Selecting subscription '$($AzureSubscriptionName)'"
 $subscription = Get-AzureRmSubscription –SubscriptionName $AzureSubscriptionName #add -TenantId if subscription name is not unique
 Select-AzureRmSubscription -SubscriptionId $subscription.SubscriptionId | Out-String | Write-Verbose
 
-Write-Host "Getting resource group '$($ResourceGroupName)'"
-if (-not (Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -ErrorAction SilentlyContinue)) {
+Write-Host "Getting resource group '$($DestResourceGroupName)'"
+if (-not (Get-AzureRmResourceGroup -Name $DestResourceGroupName -Location $ResourceGroupLocation -ErrorAction SilentlyContinue)) {
 	Write-Host "Resource group does not exists. Creating it."
-	New-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation | Out-String | Write-Verbose
+	New-AzureRmResourceGroup -Name $DestResourceGroupName -Location $ResourceGroupLocation | Out-String | Write-Verbose
 }
 
 Write-Host "Preparing the source vm '$($SolutionPrefix)vser001'"
@@ -81,11 +85,17 @@ Save-AzureRmVMImage -ResourceGroupName $SourceResourceGroupName -VMName ($Soluti
 Write-Host "Reading template"
 $template = (Get-Content $tempfile) -join "`n" | ConvertFrom-Json
 $storageProfile = $template.resources[0].properties.storageProfile
-
-#TODO source image param
+$TemplateParameters.osDiskUri = $storageProfile.osDisk.image.uri
+$TemplateParameters.dataDiskUri = $storageProfile.dataDisks[0].image.uri
 
 Write-Host "Deploying template"
-New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose | Out-String | Write-Verbose
+$deployment =New-AzureRmResourceGroupDeployment -ResourceGroupName $DestResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose
+
+Write-Host "Template outputs:"
+foreach($key in $deployment.Outputs.Keys)
+{
+    Write-Host ("  " + $key + ": " + $output[$key].Value)
+}
 
 Write-Host "Done"
 pause

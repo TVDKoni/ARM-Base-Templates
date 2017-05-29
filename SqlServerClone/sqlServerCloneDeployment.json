@@ -2,13 +2,19 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"resourceGroupName": {
+		"destResourceGroupName": {
 			"type": "string"
 		},
 		"sourceResourceGroupName": {
 			"type": "string"
 		},
 		"location": {
+			"type": "string"
+		},
+		"osDiskUri": {
+			"type": "string"
+		},
+		"dataDiskUri": {
 			"type": "string"
 		},
 		"virtualMachineName": {
@@ -283,7 +289,7 @@
 							},
 							"privateIPAllocationMethod": "Dynamic",
 							"publicIpAddress": {
-								"id": "[resourceId(parameters('resourceGroupName'),'Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
+								"id": "[resourceId(parameters('destResourceGroupName'),'Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
 							}
 						}
 					}

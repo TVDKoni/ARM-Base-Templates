@@ -36,7 +36,10 @@ Write-Host "Deploying template"
 $deployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose
 
 Write-Host "Template outputs:"
-$deployment.Outputs
+foreach($key in $deployment.Outputs.Keys)
+{
+    Write-Host ("  " + $key + ": " + $output[$key].Value)
+}
 
 Write-Host "Done"
 pause
