@@ -115,8 +115,8 @@
 			"location": "[parameters('location')]",
 			"dependsOn": [
 				"[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]",
-				"[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-				"[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticsStorageAccountName'))]"
+				"[reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15')]",
+				"[reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName')), '2015-06-15')]"
 			],
 			"properties": {
 				"osProfile": {
