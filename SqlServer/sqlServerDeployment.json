@@ -2,7 +2,7 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"resourceGroupName": {
+		"destResourceGroupName": {
 			"type": "string"
 		},
 		"location": {
@@ -91,7 +91,7 @@
 		}
 	},
 	"variables": {
-		"vnetId": "[resourceId(parameters('resourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+		"vnetId": "[resourceId(parameters('destResourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
 		"subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
 	},
 	"resources": [{
@@ -126,7 +126,7 @@
 					"osDisk": {
 						"createOption": "fromImage",
 						"vhd": {
-							"uri": "[concat(concat(reference(resourceId(parameters('resourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-osdisk.vhd')]"
+							"uri": "[concat(concat(reference(resourceId(parameters('destResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-osdisk.vhd')]"
 						},
 						"name": "[parameters('virtualMachineName')]"
 					},
@@ -137,7 +137,7 @@
 							"diskSizeGB": "1023",
 							"caching": "ReadOnly",
 							"vhd": {
-								"uri": "[concat(concat(reference(resourceId(parameters('resourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-datadisk', '.vhd')]"
+								"uri": "[concat(concat(reference(resourceId(parameters('destResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-datadisk', '.vhd')]"
 							}
 						}
 					]
@@ -151,7 +151,7 @@
 				"diagnosticsProfile": {
 					"bootDiagnostics": {
 						"enabled": true,
-						"storageUri": "[reference(resourceId(parameters('resourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName')), '2015-06-15').primaryEndpoints['blob']]"
+						"storageUri": "[reference(resourceId(parameters('destResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName')), '2015-06-15').primaryEndpoints['blob']]"
 					}
 				}
 			}
@@ -280,7 +280,7 @@
 							},
 							"privateIPAllocationMethod": "Dynamic",
 							"publicIpAddress": {
-								"id": "[resourceId(parameters('resourceGroupName'),'Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
+								"id": "[resourceId(parameters('destResourceGroupName'),'Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
 							}
 						}
 					}

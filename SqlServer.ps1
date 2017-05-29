@@ -9,7 +9,7 @@ $adminPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($admi
 
 $ResourceGroupName = ($SolutionPrefix + "resg001")
 $TemplateParameters = @{
-	resourceGroupName = $ResourceGroupName
+	destResourceGroupName = $ResourceGroupName
     adminPassword = $adminPassword
     sqlAuthenticationPassword = $adminPassword
     location = $ResourceGroupLocation
@@ -55,7 +55,10 @@ if (-not (Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $ResourceG
 }
 
 Write-Host "Deploying template"
-New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose | Out-String | Write-Verbose
+$deployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose
+
+Write-Host "Template outputs:"
+$deployment.Outputs
 
 Write-Host "Done"
 pause
