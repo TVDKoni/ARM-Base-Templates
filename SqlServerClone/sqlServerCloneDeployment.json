@@ -131,13 +131,6 @@
 					"vmSize": "[parameters('virtualMachineSize')]"
 				},
 				"storageProfile": {
-					"imageReference": {
-						"id": "[resourceId('Microsoft.Compute/images', variables('imageName'))]"
-						"publisher": "MicrosoftSQLServer",
-						"offer": "SQL2016SP1-WS2016",
-						"sku": "Enterprise",
-						"version": "latest"
-					},
 					"osDisk": {
 						"createOption": "fromImage",
 						"image": {
