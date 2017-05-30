@@ -1,6 +1,6 @@
 $SolutionPrefix = "ttvdtrn"
 $AzureSubscriptionName = "Microsoft Azure"
-$ResourceGroupLocation = "West Europe"
+$ResourceGroupLocation = "westeurope"
 $VpnGateway = "none"
 
 <#
