@@ -173,7 +173,7 @@
 				"count": "[parameters('numberOfVms')]"
 			}
 		}, {
-			"name": "[concat('microsoft.antimalware-windows-',parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]"
+			"name": "[concat('microsoft.antimalware-windows-',parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]",
 			"apiVersion": "2015-01-01",
 			"type": "Microsoft.Resources/deployments",
 			"dependsOn": [
@@ -221,7 +221,7 @@
 			"name": "[concat(concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0')), '/SqlIaasExtension')]",
 			"location": "[parameters('location')]",
 			"dependsOn": [
-				"vmCopy"
+				"vmCopy",
 				"mwCopy"
 			],
 			"properties": {
@@ -273,7 +273,7 @@
 				"count": "[parameters('numberOfVms')]"
 			}
 		}, {
-			"name": "[concat(parameters('networkInterfaceName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]"
+			"name": "[concat(parameters('networkInterfaceName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]",
 			"type": "Microsoft.Network/networkInterfaces",
 			"apiVersion": "2016-09-01",
 			"location": "[parameters('location')]",
