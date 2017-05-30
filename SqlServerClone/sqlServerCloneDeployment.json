@@ -174,7 +174,6 @@
 			}
 		}, {
 			"name": "[concat('microsoft.antimalware-windows-',parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]"
-			"name": "microsoft.antimalware-windows-20170529141643",
 			"apiVersion": "2015-01-01",
 			"type": "Microsoft.Resources/deployments",
 			"dependsOn": [
