@@ -106,19 +106,20 @@
 		"vnetId": "[resourceId(parameters('sourceResourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
 		"subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
 		"osDiskImageName": "SqlServerOsDiskImage",
-		"dataDiskImageName": "SqlServerDataDiskImage"
+		"dataDiskImageName": "SqlServerDataDiskImage",
+		"startNumber": 100
 	},
 	"resources": [{
-			"name": "[parameters('virtualMachineName')]",
+			"name": "[concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]",
 			"type": "Microsoft.Compute/virtualMachines",
 			"apiVersion": "2016-04-30-preview",
 			"location": "[parameters('location')]",
 			"dependsOn": [
-				"[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]"
+				"nicCopy"
 			],
 			"properties": {
 				"osProfile": {
-					"computerName": "[parameters('virtualMachineName')]",
+					"computerName": "[concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]",
 					"adminUsername": "[parameters('adminUsername')]",
 					"adminPassword": "[parameters('adminPassword')]",
 					"windowsConfiguration": {
@@ -136,12 +137,12 @@
 							"uri": "[parameters('osDiskUri')]"
 						},
 						"vhd": {
-							"uri": "[concat(concat(reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-osdisk.vhd')]"
+							"uri": "[concat(concat(reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0')), '-osdisk.vhd')]"
 						},
-						"name": "[parameters('virtualMachineName')]"
+						"name": "[concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]"
 					},
 					"dataDisks": [{
-							"name": "[concat(parameters('virtualMachineName'), '-disk-1')]",
+							"name": "[concat(concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0')), '-disk-1')]",
 							"createOption": "fromImage",
 							"lun": 0,
 							"caching": "ReadOnly",
@@ -149,14 +150,14 @@
 								"uri": "[parameters('dataDiskUri')]"
 							},
 							"vhd": {
-								"uri": "[concat(concat(reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-datadisk', '.vhd')]"
+								"uri": "[concat(concat(reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0')), '-datadisk', '.vhd')]"
 							}
 						}
 					]
 				},
 				"networkProfile": {
 					"networkInterfaces": [{
-							"id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
+							"id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('networkInterfaceName'),padLeft(copyIndex(variables('startNumber')),3,'0')))]"
 						}
 					]
 				},
@@ -166,11 +167,19 @@
 						"storageUri": "[reference(resourceId(parameters('sourceResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName')), '2015-06-15').primaryEndpoints['blob']]"
 					}
 				}
+			},
+			"copy": {
+				"name": "vmCopy",
+				"count": "[parameters('numberOfVms')]"
 			}
 		}, {
+			"name": "[concat('microsoft.antimalware-windows-',parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]"
 			"name": "microsoft.antimalware-windows-20170529141643",
 			"apiVersion": "2015-01-01",
 			"type": "Microsoft.Resources/deployments",
+			"dependsOn": [
+				"vmCopy"
+			],
 			"properties": {
 				"mode": "incremental",
 				"templateLink": {
@@ -178,7 +187,7 @@
 				},
 				"parameters": {
 					"vmName": {
-						"value": "[parameters('virtualMachineName')]"
+						"value": "[concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]"
 					},
 					"location": {
 						"value": "[parameters('location')]"
@@ -203,17 +212,18 @@
 					}
 				}
 			},
-			"dependsOn": [
-				"[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
-			]
+			"copy": {
+				"name": "mwCopy",
+				"count": "[parameters('numberOfVms')]"
+			}
 		}, {
 			"apiVersion": "2015-06-15",
 			"type": "Microsoft.Compute/virtualMachines/extensions",
-			"name": "[concat(parameters('virtualMachineName'), '/SqlIaasExtension')]",
+			"name": "[concat(concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0')), '/SqlIaasExtension')]",
 			"location": "[parameters('location')]",
 			"dependsOn": [
-				"[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]",
-				"microsoft.antimalware-windows-20170529141643"
+				"vmCopy"
+				"mwCopy"
 			],
 			"properties": {
 				"type": "SqlIaaSAgent",
@@ -258,40 +268,52 @@
 					"SQLAuthUpdateUserName": "[parameters('sqlAuthenticationLogin')]",
 					"SQLAuthUpdatePassword": "[parameters('sqlAuthenticationPassword')]"
 				}
+			},
+			"copy": {
+				"name": "sqlCopy",
+				"count": "[parameters('numberOfVms')]"
 			}
 		}, {
-			"name": "[parameters('networkInterfaceName')]",
+			"name": "[concat(parameters('networkInterfaceName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]"
 			"type": "Microsoft.Network/networkInterfaces",
 			"apiVersion": "2016-09-01",
 			"location": "[parameters('location')]",
 			"dependsOn": [
-				"[concat('Microsoft.Network/publicIpAddresses/', parameters('publicIpAddressName'))]"
+				"ipCopy"
 			],
 			"properties": {
 				"ipConfigurations": [{
-						"name": "ipconfig1",
+						"name": "[concat('ipconfig',copyIndex(variables('startNumber')))]",
 						"properties": {
 							"subnet": {
 								"id": "[variables('subnetRef')]"
 							},
 							"privateIPAllocationMethod": "Dynamic",
 							"publicIpAddress": {
-								"id": "[resourceId(parameters('destResourceGroupName'),'Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
+								"id": "[resourceId(parameters('destResourceGroupName'),'Microsoft.Network/publicIpAddresses', concat(parameters('publicIpAddressName'),padLeft(copyIndex(variables('startNumber')),3,'0')))]"
 							}
 						}
 					}
 				]
+			},
+			"copy": {
+				"name": "nicCopy",
+				"count": "[parameters('numberOfVms')]"
 			}
 		}, {
-			"name": "[parameters('publicIpAddressName')]",
+			"name": "[concat(parameters('publicIpAddressName'),padLeft(copyIndex(variables('startNumber')),3,'0'))]",
 			"type": "Microsoft.Network/publicIpAddresses",
 			"apiVersion": "2016-09-01",
 			"location": "[parameters('location')]",
 			"properties": {
 				"publicIpAllocationMethod": "[parameters('publicIpAddressType')]",
 				"dnsSettings": {
-					"domainNameLabel": "[tolower(parameters('virtualMachineName'))]"
+					"domainNameLabel": "[tolower(concat(parameters('virtualMachineName'),padLeft(copyIndex(variables('startNumber')),3,'0')))]"
 				}
+			},
+			"copy": {
+				"name": "ipCopy",
+				"count": "[parameters('numberOfVms')]"
 			}
 		}
 	],
@@ -306,7 +328,7 @@
 		},
 		"domainNameLabel": {
 			"type": "string",
-			"value": "[concat(tolower(parameters('virtualMachineName')), '.', tolower(parameters('location')), '.cloudapp.azure.com')]"
+			"value": "[concat(tolower(concat(parameters('virtualMachineName'),'XXX')), '.', tolower(parameters('location')), '.cloudapp.azure.com')]"
 		}
 	}
 }
