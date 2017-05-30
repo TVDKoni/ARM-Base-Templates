@@ -96,7 +96,7 @@ $deployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $DestResourc
 Write-Host "Template outputs:"
 foreach($key in $deployment.Outputs.Keys)
 {
-    Write-Host ("  " + $key + ": " + $output[$key].Value)
+    Write-Host ("  " + $key + ": " + $deployment.Outputs[$key].Value)
 }
 
 Write-Host "Done"
