@@ -111,14 +111,6 @@
 				"[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticsStorageAccountName'))]"
 			],
 			"properties": {
-				"osProfile": {
-					"computerName": "[parameters('virtualMachineName')]",
-					"adminUsername": "[parameters('adminUsername')]",
-					"adminPassword": "[parameters('adminPassword')]",
-					"windowsConfiguration": {
-						"provisionVmAgent": "true"
-					}
-				},
 				"hardwareProfile": {
 					"vmSize": "[parameters('virtualMachineSize')]"
 				},
