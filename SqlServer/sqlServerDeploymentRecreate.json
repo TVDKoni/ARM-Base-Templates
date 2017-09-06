@@ -124,7 +124,6 @@
 						"version": "latest"
 					},
 					"osDisk": {
-						"osType": "Windows",
 						"createOption": "Attach",
 						"vhd": {
 							"uri": "[concat(concat(reference(resourceId(parameters('destResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-osdisk.vhd')]"
