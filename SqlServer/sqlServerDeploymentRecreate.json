@@ -14,6 +14,12 @@
 		"virtualMachineSize": {
 			"type": "string"
 		},
+		"osDiskUri": {
+			"type": "string"
+		},
+		"dataDiskUri": {
+			"type": "string"
+		},
 		"adminUsername": {
 			"type": "string"
 		},
@@ -117,12 +123,6 @@
 					"vmSize": "[parameters('virtualMachineSize')]"
 				},
 				"storageProfile": {
-					"imageReference": {
-						"publisher": "MicrosoftSQLServer",
-						"offer": "SQL2016SP1-WS2016",
-						"sku": "Enterprise",
-						"version": "latest"
-					},
 					"osDisk": {
 						"osType": "Windows",
 						"createOption": "Attach",

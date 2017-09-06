@@ -1,0 +1,99 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"destResourceGroupName": {
+			"value": "ttvdtrnresg001"
+		},
+		"location": {
+			"value": "westeurope"
+		},
+		"virtualMachineName": {
+			"value": "ttvdtrnvser001"
+		},
+		"virtualMachineSize": {
+			"value": "Standard_DS12_v2"
+		},
+		"osDiskUri": {
+			"value": "https://ttvdtrnstac001.blob.core.windows.net/system/Microsoft.Compute/Images/templates/template-osDisk.584cfccc-637f-4c36-85cd-f33771822bea.vhd"
+		},
+		"dataDiskUri": {
+			"value": "https://ttvdtrnstac001.blob.core.windows.net/system/Microsoft.Compute/Images/templates/template-dataDisk-0.584cfccc-637f-4c36-85cd-f33771822bea.vhd"
+		},
+		"adminUsername": {
+			"value": "ttvdtrnvadmin"
+		},
+		"virtualNetworkName": {
+			"value": "ttvdtrnvnet001"
+		},
+		"networkInterfaceName": {
+			"value": "ttvdtrnvser001nic"
+		},
+		"adminPassword": {
+			"value": null
+		},
+		"storageAccountName": {
+			"value": "ttvdtrnstac001"
+		},
+		"storageAccountType": {
+			"value": "Premium_LRS"
+		},
+		"diagnosticsStorageAccountName": {
+			"value": "ttvdtrnstac002"
+		},
+		"diagnosticsStorageAccountType": {
+			"value": "Standard_LRS"
+		},
+		"diagnosticsStorageAccountId": {
+			"value": "Microsoft.Storage/storageAccounts/ttvdtrnstac002"
+		},
+		"subnetName": {
+			"value": "ttvdtrnsnet001managementServices"
+		},
+		"publicIpAddressName": {
+			"value": "ttvdtrnvser001pip"
+		},
+		"publicIpAddressType": {
+			"value": "Dynamic"
+		},
+		"sqlConnectivityType": {
+			"value": "Private"
+		},
+		"sqlPortNumber": {
+			"value": 1433
+		},
+		"sqlStorageDisksCount": {
+			"value": 1
+		},
+		"sqlStorageWorkloadType": {
+			"value": "GENERAL"
+		},
+		"sqlStorageDisksConfigurationType": {
+			"value": "NEW"
+		},
+		"sqlStorageStartingDeviceId": {
+			"value": 2
+		},
+		"sqlStorageDeploymentToken": {
+			"value": 16335
+		},
+		"sqlAutopatchingDayOfWeek": {
+			"value": "Sunday"
+		},
+		"sqlAutopatchingStartHour": {
+			"value": "2"
+		},
+		"sqlAutopatchingWindowDuration": {
+			"value": "60"
+		},
+		"sqlAuthenticationLogin": {
+			"value": "ttvdtrnvadmin"
+		},
+		"sqlAuthenticationPassword": {
+			"value": null
+		},
+		"rServicesEnabled": {
+			"value": "true"
+		}
+	}
+}
