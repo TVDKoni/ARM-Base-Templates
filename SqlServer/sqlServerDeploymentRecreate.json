@@ -111,13 +111,24 @@
 				"[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticsStorageAccountName'))]"
 			],
 			"properties": {
+				"osProfile": {
+					"computerName": "[parameters('virtualMachineName')]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"adminPassword": "[parameters('adminPassword')]",
+					"windowsConfiguration": {
+						"provisionVmAgent": "true"
+					}
+				},
 				"hardwareProfile": {
 					"vmSize": "[parameters('virtualMachineSize')]"
 				},
 				"storageProfile": {
 					"osDisk": {
 						"osType": "Windows",
-						"createOption": "Attach",
+						"createOption": "fromImage",
+						"image": {
+							"uri": "[parameters('osDiskUri')]"
+						},
 						"vhd": {
 							"uri": "[concat(concat(reference(resourceId(parameters('destResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-osdisk.vhd')]"
 						},
@@ -125,10 +136,12 @@
 					},
 					"dataDisks": [{
 							"name": "[concat(parameters('virtualMachineName'), '-disk-1')]",
-							"createOption": "Attach",
+							"createOption": "fromImage",
 							"lun": 0,
-							"diskSizeGB": "1023",
 							"caching": "ReadOnly",
+							"image": {
+								"uri": "[parameters('dataDiskUri')]"
+							},
 							"vhd": {
 								"uri": "[concat(concat(reference(resourceId(parameters('destResourceGroupName'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '-datadisk', '.vhd')]"
 							}
