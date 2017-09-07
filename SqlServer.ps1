@@ -1,3 +1,6 @@
+Write-Host "Please run first one time BaseInfrastructure.ps1! Otherwise you will encounter errors."
+pause
+
 $SolutionPrefix = "ttvdtrn"
 $AzureSubscriptionName = "Microsoft Azure"
 $ResourceGroupLocation = "westeurope"

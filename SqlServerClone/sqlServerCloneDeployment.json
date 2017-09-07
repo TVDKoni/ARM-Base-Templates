@@ -105,8 +105,6 @@
 	"variables": {
 		"vnetId": "[resourceId(parameters('sourceResourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
 		"subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
-		"osDiskImageName": "SqlServerOsDiskImage",
-		"dataDiskImageName": "SqlServerDataDiskImage",
 		"startNumber": 100
 	},
 	"resources": [{

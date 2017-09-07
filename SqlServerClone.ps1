@@ -10,6 +10,7 @@ $numVmcopies = Read-host "Number of copies to be created?"
 
 $SourceResourceGroupName = ($SolutionPrefix + "resg001")
 $DestResourceGroupName = ($SolutionPrefix + "resg002")
+
 $TemplateParameters = @{
 	numberOfVms = [convert]::ToInt32($numVmcopies)
 	destResourceGroupName = $DestResourceGroupName
@@ -60,6 +61,7 @@ Write-Host "Please prepare first the source image like described in:"
 Write-Host "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/SqlServerClone/PrepareVmImage.pdf"
 Write-Host '  - Run command: & "$Env:SystemRoot\system32\sysprep\sysprep.exe" /generalize /oobe /shutdown'
 Write-Host '  - Wait until the vm has stopped state'
+
 pause
 
 Write-Host "Login to azure account"
@@ -90,7 +92,38 @@ $storageProfile = $template.resources[0].properties.storageProfile
 $TemplateParameters.osDiskUri = $storageProfile.osDisk.image.uri
 $TemplateParameters.dataDiskUri = $storageProfile.dataDisks[0].image.uri
 
-Write-Host "Deploying template"
+
+<#
+
+$RecreateTemplateParameters = $TemplateParameters.PsObject.Copy()
+$RecreateTemplateParameters.osDiskUri = $storageProfile.osDisk.image.uri
+$RecreateTemplateParameters.dataDiskUri = $storageProfile.dataDisks[0].image.uri
+$RecreateTemplateParameters.destResourceGroupName = $SourceResourceGroupName
+$RecreateTemplateParameters.virtualMachineName = $SolutionPrefix + "vser001"
+$RecreateTemplateParameters.networkInterfaceName = $SolutionPrefix + "vser001nic"
+$RecreateTemplateParameters.publicIpAddressName = $SolutionPrefix + "vser001pip"
+$RecreateTemplateParameters.Remove("sourceResourceGroupName")
+$RecreateTemplateParameters.Remove("numberOfVms")
+$RecreateTemplateFileUri = "https://raw.githubusercontent.com/TVDKoni/ARM-Base-Templates/master/SqlServer/sqlServerDeploymentRecreate.json"
+
+Write-Host "Deleting master VM"
+Remove-AzureRmVM -ResourceGroupName $SourceResourceGroupName -Name ($SolutionPrefix + "vser001") -Force
+$StAccountKey = Get-AzureRmStorageAccountKey -ResourceGroupName $SourceResourceGroupName -AccountName $TemplateParameters.storageAccountName -ErrorAction SilentlyContinue
+$StContext = New-AzureStorageContext -StorageAccountName $TemplateParameters.storageAccountName -StorageAccountKey $StAccountKey.Key1
+$StContainer = Get-AzureStorageContainer -Context $StContext -Name "vhds"
+$StContainer | Get-AzureStorageBlob | foreach {
+    if ($_.Name -contains ($SolutionPrefix + "vser001"))
+    {
+	    $_.ICloudBlob.Delete()
+    }
+}
+
+Write-Host "Recreating master VM"
+$deployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $SourceResourceGroupName -TemplateUri $RecreateTemplateFileUri -TemplateParameterObject $RecreateTemplateParameters -Verbose
+
+#>
+
+Write-Host "Deploying clones"
 $deployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $DestResourceGroupName -TemplateUri $TemplateFileUri -TemplateParameterObject $TemplateParameters -Verbose
 
 Write-Host "Template outputs:"
