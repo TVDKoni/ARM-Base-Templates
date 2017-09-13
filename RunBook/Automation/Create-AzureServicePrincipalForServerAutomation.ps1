@@ -41,7 +41,8 @@ $PFXCert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X5
 $KeyValue = [System.Convert]::ToBase64String($PFXCert.GetRawCertData())
 
 Write-Verbose "Create Azure PSADKeyCredential"
-$KeyCredential = New-Object Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADKeyCredential
+#$KeyCredential = New-Object Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADKeyCredential
+$KeyCredential = New-Object Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory.PSADKeyCredential
 $KeyCredential.StartDate = $CurrentDate
 $KeyCredential.EndDate = $CurrentDate.AddYears(1) #(Get-Date $PFXCert.GetExpirationDateString()).ToString()
 $KeyCredential.KeyId = $KeyId
@@ -56,42 +57,43 @@ if ($null -eq $RunAsApplication) {
 	$RunAsApplication = New-AzureRmADApplication -DisplayName $ApplicationDisplayName -HomePage ("http://" + $ApplicationDisplayName) -IdentifierUris ("http://" + $KeyId) -KeyCredentials $keyCredential
 }
 
- $newApp = Get-AzureRmADApplication -ApplicationId "$($RunAsApplication.ApplicationId)" -ErrorAction SilentlyContinue
- While ($newApp -eq $null)
- {
-        sleep 10
-        $newApp = Get-AzureRmADApplication -ApplicationId "$($RunAsApplication.ApplicationId)" -ErrorAction SilentlyContinue
- }
+$newApp = Get-AzureRmADApplication -ApplicationId $RunAsApplication.ApplicationId -ErrorAction SilentlyContinue
+While ($newApp -eq $null)
+{
+	sleep 10
+	$newApp = Get-AzureRmADApplication -ApplicationId $RunAsApplication.ApplicationId -ErrorAction SilentlyContinue
+}
 
 # Create the child service principal for the Azure AD application
 if (-not (Get-AzureRmADServicePrincipal | Where {$_.ApplicationId -eq $RunAsApplication.ApplicationId})) {
 	New-AzureRMADServicePrincipal -ApplicationId $RunAsApplication.ApplicationId | Write-Verbose
 }
-Get-AzureRmADServicePrincipal | Where {$_.ApplicationId -eq $RunAsApplication.ApplicationId} | Write-Verbose
+Get-AzureRmADServicePrincipal | Where {$_.ApplicationId -eq $RunAsApplication.ApplicationId}
 
- #When the service principal becomes active, create the appropriate role assignments
- $NewRole = Get-AzureRMRoleAssignment -ServicePrincipalName $RunAsApplication.ApplicationId -ErrorAction SilentlyContinue
- While ($NewRole -eq $null)
- {
-    # Sleep here for a few seconds to allow the service principal application to become active (should only take a couple of seconds normally)
-    Sleep 5
-    Try {
-        New-AzureRMRoleAssignment -RoleDefinitionName "Contributor" -ServicePrincipalName $RunAsApplication.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
-        New-AzureRMRoleAssignment -RoleDefinitionName "User Access Administrator" -ServicePrincipalName $RunAsApplication.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
-    }
-    Catch {
-         Write-Verbose "Service Principal not yet active, delay before adding the role assignment."
-    }
-    Sleep 10
-    $NewRole = Get-AzureRMRoleAssignment -ServicePrincipalName $RunAsApplication.ApplicationId -ErrorAction SilentlyContinue
- }
- Write-Verbose "Azure AD application - $($ApplicationDisplayName) - and service principal with role assignment(s) created."
+#When the service principal becomes active, create the appropriate role assignments
+$NewRole = Get-AzureRMRoleAssignment -ErrorAction SilentlyContinue | where {$_.DisplayName -eq $ApplicationDisplayName -and $_.RoleDefinitionName -eq "Contributor"}
+While ($NewRole -eq $null)
+{
+	# Sleep here for a few seconds to allow the service principal application to become active (should only take a couple of seconds normally)
+	Sleep 20
+	Try {
+		New-AzureRMRoleAssignment -RoleDefinitionName "Contributor" -ServicePrincipalName $RunAsApplication.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
+		New-AzureRMRoleAssignment -RoleDefinitionName "User Access Administrator" -ServicePrincipalName $RunAsApplication.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
+	}
+	Catch {
+		$ErrorMessage = $_.Exception.Message
+		Write-Output "Error message: $($ErrorMessage)"
+		Write-Verbose "Service Principal not yet active, delay before adding the role assignment."
+	}
+	$NewRole = Get-AzureRMRoleAssignment -ErrorAction SilentlyContinue | where {$_.DisplayName -eq $ApplicationDisplayName -and $_.RoleDefinitionName -eq "Contributor"}
+}
+Write-Verbose "Azure AD application - $($ApplicationDisplayName) - and service principal with role assignment(s) created."
 
- # Get the tenant id for this subscription
- $SubscriptionInfo = Get-AzureRmSubscription -SubscriptionId $SubscriptionId
- $TenantID = $SubscriptionInfo | Select TenantId -First 1
+# Get the tenant id for this subscription
+$SubscriptionInfo = Get-AzureRmSubscription -SubscriptionId $SubscriptionId
+$TenantID = $SubscriptionInfo | Select TenantId -First 1
 
- # Create the automation resources
+# Create the automation resources
 
 Write-Verbose "Create the Azure automation certificate object"
 if (-not ( get-AzureRmAutomationCertificate -ResourceGroupName $ResourceGroup -AutomationAccountName $AutomationAccountName -Name "AzureRunAsCertificate"  -ErrorAction SilentlyContinue)) {

@@ -61,7 +61,7 @@ $sqlPasswordAsSecureString = ConvertTo-SecureString $sqlPassword -AsPlainText -F
 
 Write-Host "Selecting subscription as default"
 $subscription = Get-AzureRmSubscription –SubscriptionName $subscriptionName #add -TenantId if subscription name is not unique
-$subscription | Select-AzureRmSubscription
+Select-AzureRmSubscription -SubscriptionId $subscription.id
 
 Write-Host "Creating resource group '$($resourceGroupName)' to hold the automation account, key vault, and template storage account."
 

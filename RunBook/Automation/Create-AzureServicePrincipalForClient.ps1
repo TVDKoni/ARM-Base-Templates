@@ -54,7 +54,8 @@ $app = Get-AzureRmADApplication -DisplayNameStartWith $ApplicationDisplayName
 if(!$app) {
  #Create the 44-character key value
 $keyValue = Create-AesKey
-$psadCredential = New-Object "Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADPasswordCredential"
+#$psadCredential = New-Object "Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADPasswordCredential"
+$psadCredential = New-Object "Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory.PSADPasswordCredential"
 $startDate = Get-Date
 $psadCredential.StartDate = $startDate
 $psadCredential.EndDate = $startDate.AddYears(1)
@@ -67,32 +68,36 @@ $ClientApplication = New-AzureRmADApplication -DisplayName $ApplicationDisplayNa
 
 Write-Output "Azure AD application with Id: $($ClientApplication.ApplicationId) created successfully."
 
- $newClientApp = Get-AzureRmADApplication -ApplicationId "$($ClientApplication.ApplicationId)" -ErrorAction SilentlyContinue
- While ($newClientApp -eq $null)
- {
-        sleep 5
-        $newClientApp = Get-AzureRmADApplication -ApplicationId "$($ClientApplication.ApplicationId)" -ErrorAction SilentlyContinue
- }
+$newClientApp = Get-AzureRmADApplication -ApplicationId "$($ClientApplication.ApplicationId)" -ErrorAction SilentlyContinue
+While ($newClientApp -eq $null)
+{
+	sleep 5
+	$newClientApp = Get-AzureRmADApplication -ApplicationId "$($ClientApplication.ApplicationId)" -ErrorAction SilentlyContinue
+}
 
- New-AzureRMADServicePrincipal -ApplicationId $ClientApplication.ApplicationId | Write-Verbose
- Get-AzureRmADServicePrincipal | Where {$_.ApplicationId -eq $ClientApplication.ApplicationId} | Write-Verbose
+# Create the child service principal for the Azure AD application
+if (-not (Get-AzureRmADServicePrincipal | Where {$_.ApplicationId -eq $ClientApplication.ApplicationId})) {
+	New-AzureRMADServicePrincipal -ApplicationId $ClientApplication.ApplicationId | Write-Verbose
+}
+Get-AzureRmADServicePrincipal | Where {$_.ApplicationId -eq $ClientApplication.ApplicationId}
 
- $NewRole = $null
- While ($NewRole -eq $null)
- {
-    # Sleep here for a few seconds to allow the service principal application to become active (should only take a couple of seconds normally)
-    Sleep 5
-    Try {
-        New-AzureRMRoleAssignment -RoleDefinitionName "Automation Operator" -ServicePrincipalName $ClientApplication.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
-    }
-    Catch {
-        Write-Output "Service Principal not yet active, delay before adding the role assignment."
-    }
-    Sleep 10
-    $NewRole = Get-AzureRMRoleAssignment -ServicePrincipalName $ClientApplication.ApplicationId -ErrorAction SilentlyContinue
- }
+$NewRole = Get-AzureRMRoleAssignment -ErrorAction SilentlyContinue | where {$_.DisplayName -eq $ApplicationDisplayName -and $_.RoleDefinitionName -eq "Automation Operator"}
+While ($NewRole -eq $null)
+{
+	# Sleep here for a few seconds to allow the service principal application to become active (should only take a couple of seconds normally)
+	Sleep 20
+	Try {
+		New-AzureRMRoleAssignment -RoleDefinitionName "Automation Operator" -ServicePrincipalName $ClientApplication.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
+	}
+	Catch {
+		$ErrorMessage = $_.Exception.Message
+		Write-Output "Error message: $($ErrorMessage)"
+		Write-Output "Service Principal not yet active, delay before adding the role assignment."
+	}
+	$NewRole = Get-AzureRMRoleAssignment -ErrorAction SilentlyContinue | where {$_.DisplayName -eq $ApplicationDisplayName -and $_.RoleDefinitionName -eq "Automation Operator"}
+}
 
- Write-Output "Azure AD application - $($ApplicationDisplayName) - and service principal with role assignment(s) created."
+Write-Output "Azure AD application - $($ApplicationDisplayName) - and service principal with role assignment(s) created."
 
 if($backupKeyVaultName){
     Try {
