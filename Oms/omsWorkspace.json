@@ -358,6 +358,8 @@
 						"eventLogName": "System",
 						"eventTypes": [{
 								"eventType": "Error"
+							},{
+								"eventType": "Warning"
 							}
 						]
 					}
