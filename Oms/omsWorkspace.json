@@ -1,0 +1,562 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"name": {
+			"type": "string",
+			"defaultValue": "oms001",
+			"metadata": {
+				"description": "Assign a name for the Log Analytic Workspace Name"
+			}
+		},
+		"region": {
+			"type": "string",
+			"defaultValue": "westeurope",
+			"metadata": {
+				"description": "Specify the region for your Workspace"
+			}
+		},
+		"plan": {
+			"type": "string",
+			"defaultValue": "Free",
+			"allowedValues": [
+				"Free",
+				"Basic",
+				"Premium"
+			],
+			"metadata": {
+				"description": "the sku for the OMS workspace"
+			}
+		}
+	},
+	"variables": {
+		"agentSolution": "[concat(parameters('name'),'AgentHealthAssessment')]",
+		"agentSolutionName": "AgentHealthAssessment",
+		"changeTrackingSolution": "[concat(parameters('name'),'ChangeTracking')]",
+		"changeTrackingSolutionName": "ChangeTracking",
+		"updatesSolution": "[concat(parameters('name'),'Updates')]",
+		"updatesSolutionName": "Updates",
+		"office365Solution": "[concat(parameters('name'),'Office365')]",
+		"office365SolutionName": "Office365",
+		"antimalwareSolution": "[concat(parameters('name'),'AntiMalware')]",
+		"antimalwareSolutionName": "AntiMalware"
+	},
+	"resources": [{
+			"apiVersion": "2015-11-01-preview",
+			"location": "[parameters('region')]",
+			"name": "[parameters('name')]",
+			"type": "Microsoft.OperationalInsights/workspaces",
+			"comments": "Log Analytics workspace",
+			"properties": {
+				"sku": {
+					"name": "[parameters('plan')]"
+				}
+			},
+			"resources": [{
+					"name": "[concat(parameters('name'), '/', 'SoftwareUpdateFailedDaily')]",
+					"type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+					"apiVersion": "2015-11-01-preview",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"tags": {},
+					"properties": {
+						"ETag": "*",
+						"query": "Type=Event EventID=20 Source=\"Microsoft-Windows-WindowsUpdateClient\" EventLog=\"System\" TimeGenerated>NOW-24HOURS | Measure Count() By Computer",
+						"displayName": "A Software Update Installation Failed",
+						"category": "Software Updates"
+					}
+				}, {
+					"name": "[concat(parameters('name'), '/', 'SoftwareUpdateFailedWeekly')]",
+					"type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+					"apiVersion": "2015-11-01-preview",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"tags": {},
+					"properties": {
+						"ETag": "*",
+						"query": "Type=Event EventID=20 Source=\"Microsoft-Windows-WindowsUpdateClient\" EventLog=\"System\" TimeGenerated>NOW-168HOURS",
+						"displayName": "A Software Update Installation Failed",
+						"category": "Software Updates"
+					}
+				}, {
+					"name": "[concat(parameters('name'), '/', 'NetworkDisconnect')]",
+					"type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+					"apiVersion": "2015-11-01-preview",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"tags": {},
+					"properties": {
+						"ETag": "*",
+						"query": "Type=Event EventID=4202 Source=\"TCPIP\" EventLog=\"System\" TimeGenerated>NOW-24HOURS | Measure Count() By Computer",
+						"displayName": "A Network adatper was disconnected from the network",
+						"category": "Networking"
+					}
+				}, {
+					"name": "[concat(parameters('name'), '/', 'NetworkDuplIp')]",
+					"type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+					"apiVersion": "2015-11-01-preview",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"tags": {},
+					"properties": {
+						"ETag": "*",
+						"query": "Type=Event EventID=4198 OR EventID=4199 Source=\"TCPIP\" EventLog=\"System\" TimeGenerated>NOW-24HOURS",
+						"displayName": "Duplicate IP address has been detected",
+						"category": "Networking"
+					}
+				}, {
+					"name": "[concat(parameters('name'), '/', 'NtfsCorruption')]",
+					"type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+					"apiVersion": "2015-11-01-preview",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"tags": {},
+					"properties": {
+						"ETag": "*",
+						"query": "Type=Event EventID=98 Source=\"Microsoft-Windows-Ntfs\" EventLog=\"System\" TimeGenerated>NOW-24HOURS | Measure Count() By Computer",
+						"displayName": "NTFS File System Corruption",
+						"category": "NTFS"
+					}
+				}, {
+					"name": "[concat(parameters('name'), '/', 'NtfsQuota')]",
+					"type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+					"apiVersion": "2015-11-01-preview",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"tags": {},
+					"properties": {
+						"ETag": "*",
+						"query": "Type=Event EventID=40 OR EventID=36 Source=\"DISK\" EventLog=\"System\" TimeGenerated>NOW-24HOURS | Measure Count() By Compute",
+						"displayName": "NTFS Quouta treshold limit reached",
+						"category": "NTFS"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "LogicalDiskAvgRead",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "LogicalDisk",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Avg Disk sec/Read"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "LogicalDiskAvgWrite",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "LogicalDisk",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Avg Disk sec/Write"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "LogicalDiskQueue",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "LogicalDisk",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Current Disk Queue Lenght"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "LogicalDiskRead",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "LogicalDisk",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Disk Reads/sec"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "LogicalDiskTransfer",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "LogicalDisk",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Disk Transfers/sec"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "LogicalDiskWrite",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "LogicalDisk",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Disk Writes/sec"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "LogicalDiskFreeMb",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "LogicalDisk",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Free Megabytes"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "LogicalDiskFree",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "LogicalDisk",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "% Free Space"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "MemoryAvailableMb",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "Memory",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Available MBytes"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "MemoryUsed",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "Memory",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "% Committed Bytes In Use"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "NetworkReceivedBytes",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "Network Adapter",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Bytes Received/sec"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "NetworkSentBytes",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "Network Adapter",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Bytes Sent/sec"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "NetworkTotalBytes",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "Network Adapter",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Bytes Total/sec"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "ProcessorTime",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "Processor",
+						"instanceName": "_Total",
+						"intervalSeconds": 10,
+						"counterName": "% Processor Time"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "ProcessorQueue",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsPerformanceCounter",
+					"properties": {
+						"objectName": "System",
+						"instanceName": "*",
+						"intervalSeconds": 10,
+						"counterName": "Processor Queue Lenght"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "SystemError",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsEvent",
+					"properties": {
+						"eventLogName": "System",
+						"eventTypes": [{
+								"eventType": "Error"
+							}
+						]
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "SystemWarning",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsEvent",
+					"properties": {
+						"eventLogName": "System",
+						"eventTypes": [{
+								"eventType": "Warning"
+							}
+						]
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "ApplicationError",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsEvent",
+					"properties": {
+						"eventLogName": "Application",
+						"eventTypes": [{
+								"eventType": "Error"
+							}
+						]
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "ApplicationWarning",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "WindowsEvent",
+					"properties": {
+						"eventLogName": "Application",
+						"eventTypes": [{
+								"eventType": "Warning"
+							}
+						]
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "IISLog",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "IISLogs",
+					"properties": {
+						"state": "OnPremiseEnabled"
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "SyslogError",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "LinuxSyslog",
+					"properties": {
+						"syslogName": "kern",
+						"syslogSeverities": [{
+								"severity": "emerg"
+							}, {
+								"severity": "alert"
+							}, {
+								"severity": "crit"
+							}, {
+								"severity": "err"
+							}
+						]
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "SyslogWarning",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "LinuxSyslog",
+					"properties": {
+						"syslogName": "kern",
+						"syslogSeverities": [{
+								"severity": "warning"
+							}
+						]
+					}
+				}, {
+					"apiVersion": "2015-11-01-preview",
+					"type": "datasources",
+					"name": "SyslogCollection",
+					"dependsOn": [
+						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+					],
+					"kind": "LinuxSyslogCollection",
+					"properties": {
+						"state": "Enabled"
+					}
+				}
+			]
+		}, {
+			"apiVersion": "2015-11-01-preview",
+			"name": "[variables('updatesSolution')]",
+			"type": "Microsoft.OperationsManagement/solutions",
+			"location": "[parameters('region')]",
+			"id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('updatesSolution'))]",
+			"dependsOn": [
+				"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			],
+			"properties": {
+				"workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			},
+			"plan": {
+				"name": "[variables('updatesSolution')]",
+				"publisher": "Microsoft",
+				"product": "[concat('OMSGallery/', variables('updatesSolutionName'))]",
+				"promotionCode": ""
+			}
+		}, {
+			"apiVersion": "2015-11-01-preview",
+			"name": "[variables('changeTrackingSolution')]",
+			"type": "Microsoft.OperationsManagement/solutions",
+			"location": "[parameters('region')]",
+			"id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('changeTrackingSolution'))]",
+			"dependsOn": [
+				"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			],
+			"properties": {
+				"workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			},
+			"plan": {
+				"name": "[variables('changeTrackingSolution')]",
+				"publisher": "Microsoft",
+				"product": "[concat('OMSGallery/', variables('changeTrackingSolutionName'))]",
+				"promotionCode": ""
+			}
+		}, {
+			"apiVersion": "2015-11-01-preview",
+			"name": "[variables('agentSolution')]",
+			"type": "Microsoft.OperationsManagement/solutions",
+			"location": "[parameters('region')]",
+			"id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('agentSolution'))]",
+			"dependsOn": [
+				"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			],
+			"properties": {
+				"workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			},
+			"plan": {
+				"name": "[variables('agentSolution')]",
+				"publisher": "Microsoft",
+				"product": "[concat('OMSGallery/', variables('agentSolutionName'))]",
+				"promotionCode": ""
+			}
+		}, {
+			"apiVersion": "2015-11-01-preview",
+			"name": "[variables('office365Solution')]",
+			"type": "Microsoft.OperationsManagement/solutions",
+			"location": "[parameters('region')]",
+			"id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('office365Solution'))]",
+			"dependsOn": [
+				"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			],
+			"properties": {
+				"workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			},
+			"plan": {
+				"name": "[variables('office365Solution')]",
+				"publisher": "Microsoft",
+				"product": "[concat('OMSGallery/', variables('office365SolutionName'))]",
+				"promotionCode": ""
+			}
+		}, {
+			"apiVersion": "2015-11-01-preview",
+			"name": "[variables('antimalwareSolution')]",
+			"type": "Microsoft.OperationsManagement/solutions",
+			"location": "[parameters('region')]",
+			"id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('antimalwareSolution'))]",
+			"dependsOn": [
+				"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			],
+			"properties": {
+				"workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
+			},
+			"plan": {
+				"name": "[variables('antimalwareSolution')]",
+				"publisher": "Microsoft",
+				"product": "[concat('OMSGallery/', variables('antimalwareSolutionName'))]",
+				"promotionCode": ""
+			}
+		}
+	],
+	"outputs": {}
+}

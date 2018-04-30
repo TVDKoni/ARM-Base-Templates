@@ -1,0 +1,63 @@
+{
+	"$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"name": {
+			"type": "string",
+			"defaultValue": "ama001",
+			"metadata": {
+				"description": "Assign a name for the Automation Account Name"
+			}
+		},
+		"region": {
+			"type": "string",
+			"defaultValue": "westeurope",
+			"metadata": {
+				"description": "Specify the region for your Automation Account"
+			}
+		},
+		"plan": {
+			"type": "string",
+			"defaultValue": "Free",
+			"allowedValues": [
+				"Free",
+				"Basic"
+			],
+			"metadata": {
+				"description": "the sku for the Automation Account"
+			}
+		}
+	},
+	"variables": {
+		"SingleQuote": "'"
+	},
+	"resources": [{
+			"name": "[parameters('name')]",
+			"type": "Microsoft.Automation/automationAccounts",
+			"apiVersion": "2015-01-01-preview",
+			"location": "[parameters('region')]",
+			"dependsOn": [],
+			"tags": {},
+			"properties": {
+				"sku": {
+					"name": "[parameters('plan')]"
+				}
+			}
+		}, {
+			"name": "[concat(parameters('name'), '/AzureSubscriptionId') ]",
+			"type": "microsoft.automation/automationAccounts/variables",
+			"apiVersion": "2015-01-01-preview",
+			"dependsOn": [
+				"[concat('Microsoft.Automation/automationAccounts/', parameters('name'))]"
+			],
+			"tags": {},
+			"properties": {
+				"description": "",
+				"isEncrypted": 0,
+				"type": "string",
+				"value": "[concat(variables('singleQuote'),subscription().subscriptionId,variables('singleQuote'))]"
+			}
+		}
+	],
+	"outputs": {}
+}
