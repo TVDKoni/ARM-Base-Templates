@@ -349,7 +349,7 @@
 				}, {
 					"apiVersion": "2015-11-01-preview",
 					"type": "datasources",
-					"name": "SystemError",
+					"name": "System",
 					"dependsOn": [
 						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
 					],
@@ -366,21 +366,6 @@
 				}, {
 					"apiVersion": "2015-11-01-preview",
 					"type": "datasources",
-					"name": "SystemWarning",
-					"dependsOn": [
-						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
-					],
-					"kind": "WindowsEvent",
-					"properties": {
-						"eventLogName": "System",
-						"eventTypes": [{
-								"eventType": "Warning"
-							}
-						]
-					}
-				}, {
-					"apiVersion": "2015-11-01-preview",
-					"type": "datasources",
 					"name": "ApplicationError",
 					"dependsOn": [
 						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
@@ -390,20 +375,7 @@
 						"eventLogName": "Application",
 						"eventTypes": [{
 								"eventType": "Error"
-							}
-						]
-					}
-				}, {
-					"apiVersion": "2015-11-01-preview",
-					"type": "datasources",
-					"name": "ApplicationWarning",
-					"dependsOn": [
-						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
-					],
-					"kind": "WindowsEvent",
-					"properties": {
-						"eventLogName": "Application",
-						"eventTypes": [{
+							},{
 								"eventType": "Warning"
 							}
 						]
@@ -437,20 +409,7 @@
 								"severity": "crit"
 							}, {
 								"severity": "err"
-							}
-						]
-					}
-				}, {
-					"apiVersion": "2015-11-01-preview",
-					"type": "datasources",
-					"name": "SyslogWarning",
-					"dependsOn": [
-						"[concat('Microsoft.OperationalInsights/workspaces/', parameters('name'))]"
-					],
-					"kind": "LinuxSyslog",
-					"properties": {
-						"syslogName": "kern",
-						"syslogSeverities": [{
+							},{
 								"severity": "warning"
 							}
 						]
