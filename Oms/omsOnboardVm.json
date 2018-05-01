@@ -45,12 +45,12 @@
 				"typeHandlerVersion": "1.0",
 				"autoUpgradeMinorVersion": true,
 				"settings": {
-					"workspaceId": "[reference(resourceId(parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').customerId]",
+					"workspaceId": "[reference(resourceId(subscription().subscriptionId, parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').customerId]",
 					"stopOnMultipleConnections": false
 				},
 				"protectedSettings": {
-					"workspaceKey": "[listKeys(resourceId(parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').primarySharedKey]",
-					"vmResourceId": "[resourceId(parameters('vmResourceGroupName'), 'Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+					"workspaceKey": "[listKeys(resourceId(subscription().subscriptionId, parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').primarySharedKey]",
+					"vmResourceId": "[resourceId(subscription().subscriptionId, parameters('vmResourceGroupName'), 'Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
 				}
 			}
 		}
