@@ -5,8 +5,14 @@
 		"vmName": {
 			"value": "srv001"
 		},
+		"vmResourceGroupName": {
+			"value": "rsg001"
+		},
 		"workspaceName": {
 			"value": "oms001"
+		},
+		"workspaceResourceGroupName": {
+			"value": "rsg002"
 		}
 	}
 }

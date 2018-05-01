@@ -6,7 +6,14 @@
 			"type": "string",
 			"defaultValue": "vm001",
 			"metadata": {
-				"description": "Assign a name for the Log Analytic Workspace Name"
+				"description": "the vm name to be onboarded"
+			}
+		},
+		"vmResourceGroupName": {
+			"type": "string",
+			"defaultValue": "rsg001",
+			"metadata": {
+				"description": "the resource group name of the vm"
 			}
 		},
 		"workspaceName": {
@@ -14,6 +21,13 @@
 			"defaultValue": "oms001",
 			"metadata": {
 				"description": "the name of the OMS workspace"
+			}
+		},
+		"workspaceResourceGroupName": {
+			"type": "string",
+			"defaultValue": "rsg002",
+			"metadata": {
+				"description": "the resource group name of the OMS workspace"
 			}
 		}
 	},
@@ -31,12 +45,12 @@
 				"typeHandlerVersion": "1.0",
 				"autoUpgradeMinorVersion": true,
 				"settings": {
-					"workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').customerId]",
+					"workspaceId": "[reference(resourceId(parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').customerId]",
 					"stopOnMultipleConnections": false
 				},
 				"protectedSettings": {
-					"workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').primarySharedKey]",
-					"vmResourceId": "[resourceId('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+					"workspaceKey": "[listKeys(resourceId(parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').primarySharedKey]",
+					"vmResourceId": "[resourceId(parameters('vmResourceGroupName'), 'Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
 				}
 			}
 		}
