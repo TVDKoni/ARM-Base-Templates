@@ -16,6 +16,13 @@
 				"description": "the resource group name of the vm"
 			}
 		},
+		"vmSubscription": {
+			"type": "string",
+			"defaultValue": "12345678-1234-1234-456798",
+			"metadata": {
+				"description": "the subscription of the vm"
+			}
+		},
 		"workspaceName": {
 			"type": "string",
 			"defaultValue": "oms001",
@@ -28,6 +35,13 @@
 			"defaultValue": "rsg002",
 			"metadata": {
 				"description": "the resource group name of the OMS workspace"
+			}
+		},
+		"workspaceSubscription": {
+			"type": "string",
+			"defaultValue": "12345678-1234-1234-456798",
+			"metadata": {
+				"description": "the subscription of the OMS workspace"
 			}
 		}
 	},
@@ -45,12 +59,12 @@
 				"typeHandlerVersion": "1.0",
 				"autoUpgradeMinorVersion": true,
 				"settings": {
-					"workspaceId": "[reference(resourceId(subscription().subscriptionId, parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').customerId]",
+					"workspaceId": "[reference(resourceId(parameters('workspaceSubscription'), parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').customerId]",
 					"stopOnMultipleConnections": false
 				},
 				"protectedSettings": {
-					"workspaceKey": "[listKeys(resourceId(subscription().subscriptionId, parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').primarySharedKey]",
-					"vmResourceId": "[resourceId(subscription().subscriptionId, parameters('vmResourceGroupName'), 'Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+					"workspaceKey": "[listKeys(resourceId(parameters('workspaceSubscription'), parameters('workspaceResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').primarySharedKey]",
+					"vmResourceId": "[resourceId(parameters('vmSubscription'), parameters('vmResourceGroupName'), 'Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
 				}
 			}
 		}

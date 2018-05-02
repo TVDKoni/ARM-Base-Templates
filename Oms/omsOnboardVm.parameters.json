@@ -8,11 +8,17 @@
 		"vmResourceGroupName": {
 			"value": "rsg001"
 		},
+		"vmSubscription": {
+			"value": "12345678-1234-1234-456798"
+		},
 		"workspaceName": {
 			"value": "oms001"
 		},
 		"workspaceResourceGroupName": {
 			"value": "rsg002"
+		},
+		"workspaceSubscription": {
+			"value": "12345678-1234-1234-456798"
 		}
 	}
 }
