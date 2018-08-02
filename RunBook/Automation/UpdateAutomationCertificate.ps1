@@ -1,7 +1,15 @@
-#https://blog.appliedis.com/2017/05/09/automated-deployments-with-azure-resource-manager-templates-azure-automation-octopus-deploy-part-three/
-
-#requires -RunAsAdministrator
+﻿#requires -RunAsAdministrator
 #requires -Modules AzureRM
+#requires -Modules AzureAD
+
+$SubscriptionId = "bcdef123-1234-1234-1234-abcdef123456"
+$automationAccountName = "custxyzamac002"
+$resourceGroupName = "custxyzresg002"
+$backupKeyVaultName = "custxyzkeyv002"
+$ApplicationDisplayName = "$($automationAccountName)RunAs"
+
+Login-AzureRmAccount
+Select-AzureRmSubscription -SubscriptionId $SubscriptionId
 
 #https://gallery.technet.microsoft.com/Generate-a-random-and-5c879ed5
 function New-SWRandomPassword {
@@ -37,7 +45,7 @@ function New-SWRandomPassword {
     .OUTPUTS
        [String]
     .NOTES
-       Written by Simon W�hlin, blog.simonw.se
+       Written by Simon Wåhlin, blog.simonw.se
        I take no responsibility for any issues caused by this script.
     .FUNCTIONALITY
        Generates random passwords
@@ -142,31 +150,29 @@ function New-SWRandomPassword {
     }
 }
 
-Set-Location $PSScriptRoot
-Login-AzureRmAccount
-
-$adminPasswordSec = Read-host "Admin password to store in keyvault?" -AsSecureString
-$adminPasswordBSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($adminPasswordSec)
-$adminPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($adminPasswordBSTR)
-$sqlPasswordSec = Read-host "SQL server password to store in keyvault?" -AsSecureString
-$sqlPasswordBSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($sqlPasswordSec)
-$sqlPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($sqlPasswordBSTR)
 $serverPrincipalCertPassword = New-SWRandomPassword -MinPasswordLength 20 -MaxPasswordLength 32 -Count 1
 $serverPrincipalCertPasswordSec = ConvertTo-SecureString $serverPrincipalCertPassword -AsPlainText -Force
 
-sl $PSScriptRoot\RunBook\Automation
-.\Orchestration_InitialSetup.ps1 `
-    -location "westeurope" `
-    -subscriptionName "Microsoft Azure Enterprise" `
-    -resourceGroupName "custxyzresg002" `
-    -storageAccountName "custxyzstac002" `
-    -automationAccountName "custxyzamac002" `
-    -keyVaultName "custxyzkeyv002" `
-    -adminPassword $adminPassword `
-    -sqlPassword $sqlPassword `
-    -serverPrincipalCertPassword $serverPrincipalCertPasswordSec `
-    -armtemplatesLocalDir "..\Templates" `
-    -scriptsLocalDir "..\Scripts" `
-    -psrunbooksLocalDir "..\Runbooks" `
-    -publishAutomationRunbooks $true `
-    -verbose
+$CurrentDate = Get-Date
+$KeyId = (New-Guid).Guid
+$CertPath = Join-Path $env:TEMP ($ApplicationDisplayName + ".pfx")
+
+Write-Verbose "Create a new certificate for authentication of server (automation run as) service principal"
+$Cert = Get-ChildItem -Path cert:\LocalMachine\My | Where-Object { ( $PSItem.Subject -eq "CN=$($ApplicationDisplayName)") -and ($PSItem.NotAfter -gt (Get-Date).AddDays(90)) }
+if( -not $Cert) {
+	$Cert = New-SelfSignedCertificate -DnsName $ApplicationDisplayName -CertStoreLocation cert:\LocalMachine\My -KeyExportPolicy Exportable -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider"
+    #for more than one year add parameter: -NotAfter $CurrentDate.AddYears(10)
+}
+Write-Verbose "Exporting authentication certificate"
+Export-PfxCertificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $CertPath -Password $serverPrincipalCertPasswordSec -Force | Write-Verbose
+$PFXCert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate -ArgumentList @($CertPath, $serverPrincipalCertPassword)
+
+$base64Value = [System.Convert]::ToBase64String($PFXCert.GetRawCertData())
+$base64Thumbprint = [System.Convert]::ToBase64String($PFXCert.GetCertHash())
+$keyid = [System.Guid]::NewGuid().ToString() 
+
+$RunAsApplication = Get-AzureRmADApplication -DisplayNameStartWith $ApplicationDisplayName -ErrorAction SilentlyContinue
+$autCert = Set-AzureRmAutomationCertificate  -ResourceGroupName $resourceGroupName -AutomationAccountName $automationAccountName -Name "AzureRunAsCertificate" -Path $CertPath -Password $serverPrincipalCertPasswordSec
+
+Connect-AzureAD
+$psCred = New-AzureADApplicationKeyCredential -ObjectId $RunAsApplication.ObjectId -CustomKeyIdentifier $base64Thumbprint  -Type AsymmetricX509Cert -Usage Verify -Value $base64Value -StartDate $Cert.NotBefore -EndDate $Cert.NotAfter

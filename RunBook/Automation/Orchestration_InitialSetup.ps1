@@ -19,10 +19,10 @@ $serverPrincipalCertPassword = New-SWRandomPassword -MinPasswordLength 20 -MaxPa
 .\Orchestration_InitialSetup.ps1 `
     -location = "westeurope" `
     -subscriptionName "Microsoft Azure Enterprise" `
-    -resourceGroupName "pdslivegresg002" `
-    -storageAccountName "pdslivegstac002" `
-    -automationAccountName "pdslivegamac002" `
-    -keyVaultName "pdslivegamac002" `
+    -resourceGroupName "custxyzresg002" `
+    -storageAccountName "custxyzstac002" `
+    -automationAccountName "custxyzamac002" `
+    -keyVaultName "custxyzamac002" `
     -adminPassword $adminPassword `
     -serverPrincipalCertPassword $serverPrincipalCertPassword `
     -armtemplatesLocalDir "..\Templates" `
