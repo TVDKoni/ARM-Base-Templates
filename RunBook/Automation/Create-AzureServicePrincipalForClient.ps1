@@ -6,13 +6,9 @@
  [String] $ApplicationDisplayName,
 
  [Parameter(Mandatory=$true)]
- [string]$backupKeyVaultName,
-
- [Parameter(Mandatory=$true)]
- [string]$adminPassword
+ [string]$backupKeyVaultName
 
  )
-
 
 function Create-AesManagedObject($key, $IV) {
 
@@ -60,8 +56,7 @@ $startDate = Get-Date
 $psadCredential.StartDate = $startDate
 $psadCredential.EndDate = $startDate.AddYears(1)
 $psadCredential.KeyId = [guid]::NewGuid()
-$psadCredential.Password = $adminPassword
-
+$psadCredential.Password = $keyValue
 
 $newId = (New-Guid).Guid
 $ClientApplication = New-AzureRmADApplication -DisplayName $ApplicationDisplayName -HomePage ("http://" + $ApplicationDisplayName) -IdentifierUris ("http://" + $newId) -PasswordCredentials $psadCredential

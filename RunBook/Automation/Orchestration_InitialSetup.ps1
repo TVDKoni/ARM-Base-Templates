@@ -14,7 +14,7 @@ Optionally publishes all ps runbooks in specified directory to azure automation 
 Login-AzureRmAccount
 
 $adminPassword = Read-host "Admin password to store in keyvault?"
-$serverPrincipalCertPassword = New-SWRandomPassword -MinPasswordLength 20 -MaxPasswordLength 32 -Count 1
+$serverPrincipalCertPasswordSec = New-SWRandomPassword -MinPasswordLength 20 -MaxPasswordLength 32 -Count 1
 
 .\Orchestration_InitialSetup.ps1 `
     -location = "westeurope" `
@@ -24,7 +24,7 @@ $serverPrincipalCertPassword = New-SWRandomPassword -MinPasswordLength 20 -MaxPa
     -automationAccountName "custxyzamac002" `
     -keyVaultName "custxyzamac002" `
     -adminPassword $adminPassword `
-    -serverPrincipalCertPassword $serverPrincipalCertPassword `
+    -serverPrincipalCertPasswordSec $serverPrincipalCertPasswordSec `
     -armtemplatesLocalDir "..\Templates" `
     -scriptsLocalDir "..\Scripts" `
     -psrunbooksLocalDir "..\Runbooks" `
@@ -49,15 +49,13 @@ Param(
 	[string]$automationAccountName,
 	[ValidateLength(3, 24)]
 	[string]$keyVaultName,
-	[string]$adminPassword,
-	[string]$sqlPassword,
+	[SecureString]$adminPasswordSec,
+	[SecureString]$sqlPasswordSec,
 	[Parameter(Mandatory=$true)]
-	[SecureString]$serverPrincipalCertPassword,
+	[SecureString]$serverPrincipalCertPasswordSec,
 	[bool]$publishAutomationRunbooks = $true
 )
 $errorActionPreference = 'stop'
-$adminPasswordAsSecureString = ConvertTo-SecureString $adminPassword -AsPlainText -Force
-$sqlPasswordAsSecureString = ConvertTo-SecureString $sqlPassword -AsPlainText -Force
 
 Write-Host "Selecting subscription as default"
 $subscription = Get-AzureRmSubscription –SubscriptionName $subscriptionName #add -TenantId if subscription name is not unique
@@ -69,7 +67,7 @@ if (-not (Get-AzureRmResourceGroup -Name $resourceGroupName -Location $location 
 	New-AzureRmResourceGroup -Name $resourceGroupName -Location $location  | Out-String | Write-Verbose
 }
 
-Write-Host "Create storage account '$($storageAccountName)' (this takes a while sometimes)"
+Write-Host "Create storage account '$($storageAccountName)' to store assets in azure"
 if (-not (Get-AzureRmStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName -ErrorAction SilentlyContinue )) {
 	New-AzureRmStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName -Location $location -SkuName Standard_LRS  | Out-String | Write-Verbose
 }
@@ -79,9 +77,9 @@ if (-not (Get-AzureRmAutomationAccount -ResourceGroupName $resourceGroupName -Na
 	New-AzureRmAutomationAccount -ResourceGroupName $resourceGroupName -Name $automationAccountName -Location $location -Plan Free  | Out-String | Write-Verbose
 
     Write-Host "Create automation credentials."
-    $adminCredential = New-Object –TypeName System.Management.Automation.PSCredential –ArgumentList "$($resourceGroupName)AdminPassword", $adminPasswordAsSecureString
+    $adminCredential = New-Object –TypeName System.Management.Automation.PSCredential –ArgumentList "$($resourceGroupName)AdminPassword", $adminPasswordSec
     New-AzureRmAutomationCredential -ResourceGroupName $resourceGroupName -AutomationAccountName $automationAccountName -Name "$($resourceGroupName)AdminPassword" -Value $adminCredential
-    $sqlCredential = New-Object –TypeName System.Management.Automation.PSCredential –ArgumentList "$($resourceGroupName)SqlPassword", $sqlPasswordAsSecureString
+    $sqlCredential = New-Object –TypeName System.Management.Automation.PSCredential –ArgumentList "$($resourceGroupName)SqlPassword", $sqlPasswordSec
     New-AzureRmAutomationCredential -ResourceGroupName $resourceGroupName -AutomationAccountName $automationAccountName -Name "$($resourceGroupName)SqlPassword" -Value $sqlCredential
 }
 
@@ -96,11 +94,11 @@ if (-not (Get-AzureRMKeyVault -VaultName $keyVaultName -ResourceGroupName $resou
     }
     Write-Host "  Adding key: AdminPassword"
 	$key = Add-AzureKeyVaultKey -VaultName $keyVaultName -Name "$($resourceGroupName)AdminPassword" -Destination 'Software'
-	$adminSecret = Set-AzureKeyVaultSecret -VaultName $keyVaultName -Name "$($resourceGroupName)AdminPassword" -SecretValue $adminPasswordAsSecureString
+	$adminSecret = Set-AzureKeyVaultSecret -VaultName $keyVaultName -Name "$($resourceGroupName)AdminPassword" -SecretValue $adminPasswordSec
 
     Write-Host "  Adding key: SqlPassword"
 	$key = Add-AzureKeyVaultKey -VaultName $keyVaultName -Name "$($resourceGroupName)SqlPassword" -Destination 'Software'
-	$sqlSecret = Set-AzureKeyVaultSecret -VaultName $keyVaultName -Name "$($resourceGroupName)SqlPassword" -SecretValue $sqlPasswordAsSecureString
+	$sqlSecret = Set-AzureKeyVaultSecret -VaultName $keyVaultName -Name "$($resourceGroupName)SqlPassword" -SecretValue $sqlPasswordSec
 }
 
 	& ".\Create-AzureServicePrincipalForServerAutomation.ps1" `
@@ -108,22 +106,21 @@ if (-not (Get-AzureRMKeyVault -VaultName $keyVaultName -ResourceGroupName $resou
 	    -ResourceGroup $resourceGroupName `
 	    -AutomationAccountName $automationAccountName `
 	    -ApplicationDisplayName "$($automationAccountName)RunAs" `
-	    -certPassword $serverPrincipalCertPassword `
+	    -certPassword $serverPrincipalCertPasswordSec `
 	    -backupCertVaultName $keyVaultName
 
 	Write-Output "New service principal created for server auth - $($automationAccountName)RunAs."
     $RunAsApplication = Get-AzureRmADApplication -DisplayNameStartWith "$($automationAccountName)RunAs" -ErrorAction SilentlyContinue
-    Set-AzureRmKeyVaultAccessPolicy -ResourceGroupName $resourceGroupName -VaultName $keyVaultName -ServicePrincipalName $RunAsApplication.ApplicationId -PermissionsToKeys all -PermissionsToSecrets all
+    Set-AzureRmKeyVaultAccessPolicy -ResourceGroupName $resourceGroupName -VaultName $keyVaultName -ServicePrincipalName $RunAsApplication.ApplicationId -PermissionsToKeys decrypt,encrypt,unwrapKey,wrapKey,verify,sign,get,list,update,create,import,delete,backup,restore,recover,purge -PermissionsToSecrets get,list,set,delete,backup,restore,recover,purge
 
 	& ".\Create-AzureServicePrincipalForClient.ps1" `
 	    -SubscriptionId $subscription.SubscriptionId `
 	    -ApplicationDisplayName "$($automationAccountName)Client" `
-	    -backupKeyVaultName $keyVaultName `
-	    -adminPassword $adminPassword
+	    -backupKeyVaultName $keyVaultName
 
 	Write-Output "New service principal created for client auth - $($automationAccountName)Client."
     $ClientApplication = Get-AzureRmADApplication -DisplayNameStartWith "$($automationAccountName)Client"
-    Set-AzureRmKeyVaultAccessPolicy -ResourceGroupName $resourceGroupName -VaultName $keyVaultName -ServicePrincipalName $ClientApplication.ApplicationId -PermissionsToKeys all -PermissionsToSecrets all
+    Set-AzureRmKeyVaultAccessPolicy -ResourceGroupName $resourceGroupName -VaultName $keyVaultName -ServicePrincipalName $ClientApplication.ApplicationId -PermissionsToKeys decrypt,encrypt,unwrapKey,wrapKey,verify,sign,get,list,update,create,import,delete,backup,restore,recover,purge -PermissionsToSecrets get,list,set,delete,backup,restore,recover,purge
 
 	$context = (Get-AzureRmStorageAccount -Name $storageAccountName -ResourceGroupName $resourceGroupName).Context
 

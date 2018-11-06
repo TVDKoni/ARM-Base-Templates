@@ -146,13 +146,10 @@ Set-Location $PSScriptRoot
 Login-AzureRmAccount
 
 $adminPasswordSec = Read-host "Admin password to store in keyvault?" -AsSecureString
-$adminPasswordBSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($adminPasswordSec)
-$adminPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($adminPasswordBSTR)
 $sqlPasswordSec = Read-host "SQL server password to store in keyvault?" -AsSecureString
-$sqlPasswordBSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($sqlPasswordSec)
-$sqlPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($sqlPasswordBSTR)
 $serverPrincipalCertPassword = New-SWRandomPassword -MinPasswordLength 20 -MaxPasswordLength 32 -Count 1
 $serverPrincipalCertPasswordSec = ConvertTo-SecureString $serverPrincipalCertPassword -AsPlainText -Force
+$serverPrincipalCertPassword = ""
 
 sl $PSScriptRoot\RunBook\Automation
 .\Orchestration_InitialSetup.ps1 `
@@ -162,9 +159,9 @@ sl $PSScriptRoot\RunBook\Automation
     -storageAccountName "custxyzstac002" `
     -automationAccountName "custxyzamac002" `
     -keyVaultName "custxyzkeyv002" `
-    -adminPassword $adminPassword `
-    -sqlPassword $sqlPassword `
-    -serverPrincipalCertPassword $serverPrincipalCertPasswordSec `
+    -adminPasswordSec $adminPasswordSec `
+    -sqlPasswordSec $sqlPasswordSec `
+    -serverPrincipalCertPasswordSec $serverPrincipalCertPasswordSec `
     -armtemplatesLocalDir "..\Templates" `
     -scriptsLocalDir "..\Scripts" `
     -psrunbooksLocalDir "..\Runbooks" `
